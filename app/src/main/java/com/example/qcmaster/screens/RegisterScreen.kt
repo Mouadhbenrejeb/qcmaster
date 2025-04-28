@@ -19,23 +19,31 @@ import androidx.navigation.NavController
 import com.example.qcmaster.data.ProfessorRepository
 import com.example.qcmaster.model.Professor
 import com.example.qcmaster.model.professors
+import com.example.qcmaster.SessionManager
 
 
-
-
+fun isValidEmail(email: String): Boolean {
+    return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+}
 @Composable
 fun RegisterScreen(navController: NavController) {
     var cin by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") } // ✨ New email field
+
     val cinHasError = cin.isNotEmpty() && cin.length != 8
     val passwordHasError = password.isNotEmpty() && password.length < 6
-    val isFormValid = cin.length == 8 && password.length >= 6
     val confirmPasswordHasError = confirmPassword.isNotEmpty() && confirmPassword != password
+   // val isFormValid = cin.length == 8 && password.length >= 6 && name.isNotBlank() && email.isNotBlank()
+
     var cinExistsError by remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
-    var name by remember { mutableStateOf("") }
+
+    val emailHasError = email.isNotEmpty() && !isValidEmail(email)
+    val isFormValid = cin.length == 8 && password.length >= 6 && isValidEmail(email)
 
 
     Column(
@@ -48,8 +56,7 @@ fun RegisterScreen(navController: NavController) {
         Text("Register Professor", fontSize = 22.sp)
         Spacer(modifier = Modifier.height(16.dp))
 
-
-
+        // --- CIN Field ---
         OutlinedTextField(
             value = cin,
             onValueChange = {
@@ -61,7 +68,6 @@ fun RegisterScreen(navController: NavController) {
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             isError = cinHasError
         )
-
         if (cinHasError) {
             Text(
                 text = "CIN must be exactly 8 digits",
@@ -79,10 +85,9 @@ fun RegisterScreen(navController: NavController) {
             )
         }
 
-
-
         Spacer(modifier = Modifier.height(12.dp))
 
+        // --- Password Field ---
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
@@ -93,15 +98,11 @@ fun RegisterScreen(navController: NavController) {
             isError = passwordHasError,
             trailingIcon = {
                 val icon = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                val description = if (passwordVisible) "Hide password" else "Show password"
-
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(imageVector = icon, contentDescription = description)
+                    Icon(imageVector = icon, contentDescription = null)
                 }
             }
         )
-
-
         if (passwordHasError) {
             Text(
                 text = "Password must be at least 6 characters",
@@ -111,9 +112,9 @@ fun RegisterScreen(navController: NavController) {
             )
         }
 
-
         Spacer(modifier = Modifier.height(12.dp))
 
+        // --- Confirm Password Field ---
         OutlinedTextField(
             value = confirmPassword,
             onValueChange = { confirmPassword = it },
@@ -124,17 +125,11 @@ fun RegisterScreen(navController: NavController) {
             isError = confirmPasswordHasError,
             trailingIcon = {
                 val icon = if (confirmPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                val description = if (confirmPasswordVisible) "Hide password" else "Show password"
-
                 IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
-                    Icon(imageVector = icon, contentDescription = description)
+                    Icon(imageVector = icon, contentDescription = null)
                 }
             }
         )
-
-
-
-
         if (confirmPasswordHasError) {
             Text(
                 text = "Passwords do not match",
@@ -146,18 +141,22 @@ fun RegisterScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // --- Register Button ---
         Button(
             onClick = {
                 cinExistsError = false
-
                 if (isFormValid && confirmPassword == password) {
                     val registrationSuccess = ProfessorRepository.register(
-                        Professor(cin = cin, password = password, name = name)
+                        Professor(cin = cin, password = password, name = name, email = email) // Save email too!
                     )
 
                     if (registrationSuccess) {
-                        professors.add(Professor(cin, password, name))
-                        navController.navigate("home/$name")
+                        professors.add(Professor(cin, password, name, email)) // Don't forget to modify your Professor model
+                        SessionManager.profName = name
+                        SessionManager.profEmail = email
+                        navController.navigate("home/$name/$email")
+
+
                     } else {
                         cinExistsError = true
                     }
@@ -167,22 +166,43 @@ fun RegisterScreen(navController: NavController) {
             Text("Register")
         }
 
+        Spacer(modifier = Modifier.height(24.dp))
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        TextButton(onClick = {
-            navController.popBackStack()  // Go back to Login screen
-        }) {
-            Text("Already have an account? Login", color = MaterialTheme.colorScheme.primary)
-        }
+        // --- Name Field ---
         OutlinedTextField(
             value = name,
             onValueChange = { name = it },
             label = { Text("Name") },
-            singleLine = true
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
         )
 
+        Spacer(modifier = Modifier.height(12.dp))
 
+        // --- Email Field ---
+        OutlinedTextField(
+            value = email,
+            onValueChange = { email = it },
+            label = { Text("Email") },
+            singleLine = true,
+            isError = emailHasError
+        )
 
+        if (emailHasError) {
+            Text(
+                text = "Invalid email format",
+                color = MaterialTheme.colorScheme.error,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // --- Login Redirect ---
+        TextButton(onClick = { navController.popBackStack() }) {
+            Text("Already have an account? Login", color = MaterialTheme.colorScheme.primary)
+        }
     }
 }
+

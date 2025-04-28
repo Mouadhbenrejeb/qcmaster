@@ -16,6 +16,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.qcmaster.SessionManager
+
 
 @Composable
 fun MyNavigationBar(navController: NavController) {
@@ -48,7 +50,8 @@ fun MyNavigationBar(navController: NavController) {
                 onClick = {
                     // Navigate to the respective screen when clicked
                     when (index) {
-                        0 -> navController.navigate("home/ProfName") // Update with actual profName
+                        0 ->navController.navigate("home/${SessionManager.profName}/${SessionManager.profEmail}")
+                        // Update with actual profName
                         1 -> navController.navigate("classes")
                         2 -> navController.navigate("students")
                     }

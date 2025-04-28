@@ -1,38 +1,77 @@
 package com.example.qcmaster.ui.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Text
-import androidx.compose.material3.MaterialTheme  // Add this import
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.qcmaster.components.MyNavigationBar
-import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
+import com.example.qcmaster.components.MyNavigationBar
 
 @Composable
-fun HomeScreen(profName: String, navController: NavController) {
-    // Scaffold with the bottom navigation bar
+fun HomeScreen(
+    profName: String,
+    profEmail: String,
+    navController: NavController
+)  {
+    var showProfile by remember { mutableStateOf(false) }  // Control the profile dialog
+
     Scaffold(
-        bottomBar = { MyNavigationBar(navController) } // Pass navController to MyNavigationBar
+        bottomBar = { MyNavigationBar(navController) }
     ) { paddingValues ->
-        // Main content area
-        Box(modifier = Modifier.padding(paddingValues)) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.Top
+        Column(
+            modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Top
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     text = "Welcome, Prof. $profName",
-                    style = MaterialTheme.typography.headlineSmall,  // Updated to headlineSmall
-                    fontSize = 24.sp
+                    style = MaterialTheme.typography.titleLarge
                 )
 
-                // You can add more content below as needed
+                Button(
+                    onClick = { showProfile = true },
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                ) {
+                    Text(text = "Profile")
+                }
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = " Home ",
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
+
+        // --- Profile Dialog ---
+        if (showProfile) {
+            AlertDialog(
+                onDismissRequest = { showProfile = false },
+                title = {
+                    Text(text = "Profile Details")
+                },
+                text = {
+                    Column {
+                        Text(text = "👨‍🏫 Name: Professor. $profName")
+                        Text(text = "📧 Email: $profEmail\",")
+                    }
+                },
+                confirmButton = {
+                    Button(onClick = { showProfile = false }) {
+                        Text("Close")
+                    }
+                }
+            )
         }
     }
 }
