@@ -4,36 +4,42 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Class
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.outlined.Class
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.qcmaster.SessionManager
 
-
 @Composable
 fun MyNavigationBar(navController: NavController) {
-    // Get the current back stack entry from the NavController to track the current screen
     val navBackStackEntry = navController.currentBackStackEntryAsState()
 
-    val items = listOf("Home", "Classes", "Students")
-    val selectedIcons = listOf(Icons.Filled.Home, Icons.Filled.Class, Icons.Filled.Person)
-    val unselectedIcons = listOf(Icons.Outlined.Home, Icons.Outlined.Class, Icons.Outlined.Person)
+    val items = listOf("Home", "Classes", "Students", "Exams")
+    val selectedIcons = listOf(
+        Icons.Filled.Home,
+        Icons.Filled.Class,
+        Icons.Filled.Person,
+        Icons.Filled.Edit
+    )
+    val unselectedIcons = listOf(
+        Icons.Outlined.Home,
+        Icons.Outlined.Class,
+        Icons.Outlined.Person,
+        Icons.Outlined.Edit
+    )
 
-    // Determine which item should be selected based on the current route
-    val selectedIndex = when (navBackStackEntry.value?.destination?.route) {
-        "home/{profName}" -> 0
-        "classes" -> 1
-        "students" -> 2
-        else -> 0 // Default to Home if no match
+    val currentRoute = navBackStackEntry.value?.destination?.route
+    val selectedIndex = when {
+        currentRoute?.startsWith("home") == true -> 0
+        currentRoute == "classes" -> 1
+        currentRoute == "students" -> 2
+        currentRoute == "exams" -> 3
+        else -> 0
     }
 
     NavigationBar {
@@ -48,12 +54,11 @@ fun MyNavigationBar(navController: NavController) {
                 label = { Text(item) },
                 selected = selectedIndex == index,
                 onClick = {
-                    // Navigate to the respective screen when clicked
                     when (index) {
-                        0 ->navController.navigate("home/${SessionManager.profName}/${SessionManager.profEmail}")
-                        // Update with actual profName
+                        0 -> navController.navigate("home/${SessionManager.profName}/${SessionManager.profEmail}")
                         1 -> navController.navigate("classes")
                         2 -> navController.navigate("students")
+                        3 -> navController.navigate("exams")
                     }
                 }
             )

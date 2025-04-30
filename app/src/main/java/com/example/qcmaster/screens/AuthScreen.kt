@@ -15,9 +15,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.ui.text.input.VisualTransformation
+import com.example.qcmaster.SessionManager
 import com.example.qcmaster.model.professors
-
-
 
 @Composable
 fun AuthScreen(navController: NavController) {
@@ -30,9 +29,6 @@ fun AuthScreen(navController: NavController) {
     var passwordVisible by remember { mutableStateOf(false) }
     val prof = professors.find { it.cin == cin && it.password == password }
     var errorMessage by remember { mutableStateOf("") }
-
-
-
 
     Column(
         modifier = Modifier
@@ -114,7 +110,13 @@ fun AuthScreen(navController: NavController) {
                     val professor = professors.find { it.cin == cin && it.password == password }
 
                     if (professor != null) {
-                        navController.navigate("home/${professor.name}")
+                        // Save the session using SessionManager
+                        SessionManager.saveSession(professor.email, professor.name)
+
+                        // Navigate to home screen
+                        navController.navigate("home/${professor.name}/${professor.email}") {
+                            popUpTo("auth") { inclusive = true }
+                        }
                     } else {
                         loginError = true
                     }
@@ -139,4 +141,5 @@ fun AuthScreen(navController: NavController) {
                 Text("Register", color = MaterialTheme.colorScheme.primary)
             }
         }
-    }}
+    }
+}

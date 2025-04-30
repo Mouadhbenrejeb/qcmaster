@@ -12,37 +12,33 @@ import com.example.qcmaster.ui.screens.HomeScreen
 import com.example.qcmaster.ui.screens.RegisterScreen
 import com.example.qcmaster.screens.ClassesScreen
 import com.example.qcmaster.screens.StudentsScreen
-
-
+import com.example.qcmaster.screens.ExamsScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        SessionManager.init(this)  // still needed for logout/login
+
         setContent {
             QcmasterTheme {
                 val navController = rememberNavController()
 
-                // Navigation setup
                 NavHost(navController = navController, startDestination = "auth") {
                     composable("auth") { AuthScreen(navController) }
                     composable("register") { RegisterScreen(navController) }
                     composable("home/{profName}/{profEmail}") { backStackEntry ->
                         val profName = backStackEntry.arguments?.getString("profName") ?: "Unknown"
                         val profEmail = backStackEntry.arguments?.getString("profEmail") ?: "Unknown"
-
                         HomeScreen(profName, profEmail, navController)
                     }
+                    composable("classes") { ClassesScreen(navController) }
+                    composable("students") { StudentsScreen(navController) }
+                    composable("exams") {
+                        ExamsScreen(navController)
+                    }
 
-                    composable("classes") { ClassesScreen(navController) }  // Pass navController here
-                    composable("students") { StudentsScreen(navController) }  // Pass navController here
                 }
             }
         }
-    }
-}
-
-
-
-
-
+    }}
 
