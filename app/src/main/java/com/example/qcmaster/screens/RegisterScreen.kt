@@ -17,8 +17,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.qcmaster.data.ProfessorRepository
-import com.example.qcmaster.model.Professor
-import com.example.qcmaster.model.professors
+import com.example.qcmaster.models.Professor
+import com.example.qcmaster.models.professors
 import com.example.qcmaster.SessionManager
 
 

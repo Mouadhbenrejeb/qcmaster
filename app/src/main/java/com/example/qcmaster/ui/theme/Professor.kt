@@ -1,5 +1,5 @@
 
-package com.example.qcmaster.model
+package com.example.qcmaster.models
 
 
 

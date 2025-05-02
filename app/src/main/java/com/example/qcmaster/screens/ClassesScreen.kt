@@ -1,5 +1,6 @@
 package com.example.qcmaster.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,13 +14,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.qcmaster.components.MyNavigationBar
+import com.example.qcmaster.data.FakeClassRepository
+import com.example.qcmaster.data.FakeStudentRepository
 
 @Composable
 fun ClassesScreen(navController: NavController) {
     var showDialog by remember { mutableStateOf(false) }
     var className by remember { mutableStateOf("") }
-    var classes by remember { mutableStateOf(listOf<String>()) }
-    var duplicateError by remember { mutableStateOf(false) } // 🔴 Error flag
+    val classes = FakeClassRepository.professorClasses
+    var duplicateError by remember { mutableStateOf(false) }
+
+    val students = FakeStudentRepository.getAllStudents()
 
     Scaffold(
         bottomBar = { MyNavigationBar(navController) },
@@ -27,7 +32,7 @@ fun ClassesScreen(navController: NavController) {
             ExtendedFloatingActionButton(
                 onClick = {
                     showDialog = true
-                    duplicateError = false // reset when dialog opens
+                    duplicateError = false
                 },
                 icon = { Icon(Icons.Filled.Add, contentDescription = "Add Class") },
                 text = { Text("Add Class") }
@@ -48,10 +53,15 @@ fun ClassesScreen(navController: NavController) {
             } else {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                     items(classes) { classItem ->
+                        val studentCount = students.count { it.assignedClass == classItem }
+
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 4.dp),
+                                .padding(vertical = 4.dp)
+                                .clickable {
+                                    navController.navigate("class_exams/$classItem")
+                                },
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                         ) {
                             Row(
@@ -61,12 +71,18 @@ fun ClassesScreen(navController: NavController) {
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(
-                                    text = classItem,
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
+                                Column {
+                                    Text(
+                                        text = classItem,
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                    Text(
+                                        text = "$studentCount student${if (studentCount != 1) "s" else ""}",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
                                 IconButton(onClick = {
-                                    classes = classes.filter { it != classItem }
+                                    FakeClassRepository.professorClasses.remove(classItem)
                                 }) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
@@ -90,7 +106,7 @@ fun ClassesScreen(navController: NavController) {
                             value = className,
                             onValueChange = {
                                 className = it
-                                duplicateError = false // clear error while typing
+                                duplicateError = false
                             },
                             label = { Text("Class Name") },
                             isError = duplicateError
@@ -111,7 +127,7 @@ fun ClassesScreen(navController: NavController) {
                                 if (classes.contains(className)) {
                                     duplicateError = true
                                 } else {
-                                    classes = classes + className
+                                    FakeClassRepository.professorClasses.add(className)
                                     className = ""
                                     duplicateError = false
                                     showDialog = false
@@ -134,5 +150,3 @@ fun ClassesScreen(navController: NavController) {
         }
     }
 }
-
-

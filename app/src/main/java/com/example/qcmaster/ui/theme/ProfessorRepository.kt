@@ -1,7 +1,7 @@
 
 package com.example.qcmaster.data
 
-import com.example.qcmaster.model.Professor
+import com.example.qcmaster.models.Professor
 
 object ProfessorRepository {
     private val professors = mutableListOf<Professor>()

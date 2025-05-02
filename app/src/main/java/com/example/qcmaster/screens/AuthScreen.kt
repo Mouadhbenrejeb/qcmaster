@@ -16,7 +16,7 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.ui.text.input.VisualTransformation
 import com.example.qcmaster.SessionManager
-import com.example.qcmaster.model.professors
+import com.example.qcmaster.models.professors
 
 @Composable
 fun AuthScreen(navController: NavController) {

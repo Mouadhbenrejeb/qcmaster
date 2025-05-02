@@ -28,6 +28,7 @@ fun HomeScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.Top
         ) {
+            // Header row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -48,13 +49,29 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // ... inside Column after "Home" title
+            Spacer(modifier = Modifier.height(24.dp))
+
             Text(
                 text = "Home",
                 style = MaterialTheme.typography.titleMedium
             )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+// Enlarged Scan Exam Button
+            Button(
+                onClick = { navController.navigate("exams") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp)
+            ) {
+                Text("📄 Scan Exam", style = MaterialTheme.typography.titleMedium)
+            }
+
         }
 
-        // --- Profile Dialog ---
+        // Profile Dialog
         if (showProfile) {
             AlertDialog(
                 onDismissRequest = { showProfile = false },
@@ -76,10 +93,8 @@ fun HomeScreen(
                 },
                 dismissButton = {
                     Button(onClick = {
-                        // Clear session and go to auth screen
                         SessionManager.clearSession()
                         navController.navigate("auth") {
-                            // Pop up the entire back stack so the user cannot navigate back
                             popUpTo("auth") { inclusive = true }
                         }
                     }) {

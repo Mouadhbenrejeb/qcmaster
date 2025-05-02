@@ -72,25 +72,29 @@ dependencies {
     implementation("androidx.compose.ui:ui:1.3.0")
     implementation("androidx.compose.material3:material3:1.0.0")
     implementation("androidx.navigation:navigation-compose:2.7.7")
-    implementation ("androidx.compose.ui:ui:1.4.0") // Make sure this is the latest version (or 1.3.x if you're using an older version)
-    implementation ("androidx.compose.material3:material3:1.0.0") // or the appropriate version for material3
-    implementation ("androidx.compose.ui:ui-tooling-preview:1.4.0") // For UI previews
-    implementation ("androidx.compose.foundation:foundation:1.4.0") // For layout and other components
+    implementation("androidx.compose.ui:ui:1.4.0") // Make sure this is the latest version (or 1.3.x if you're using an older version)
+    implementation("androidx.compose.material3:material3:1.0.0") // or the appropriate version for material3
+    implementation("androidx.compose.ui:ui-tooling-preview:1.4.0") // For UI previews
+    implementation("androidx.compose.foundation:foundation:1.4.0") // For layout and other components
 
     // Ensure you're using Kotlin and Compose Compiler that is compatible
-    implementation ("androidx.compose.compiler:compiler:1.4.0" )
+    implementation("androidx.compose.compiler:compiler:1.4.0")
 // Compose BOM (optional but recommended)
-    implementation ("androidx.compose:compose-bom:2024.01.00")
+    implementation("androidx.compose:compose-bom:2024.01.00")
 
 // Core UI libraries
-    implementation ("androidx.compose.ui:ui")
-    implementation ("androidx.compose.material3:material3")
-    implementation ("androidx.navigation:navigation-compose:2.7.7")
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.navigation:navigation-compose:2.7.7")
 
 // Required for KeyboardOptions and other input APIs
-    implementation ("androidx.compose.ui:ui-text")
+    implementation("androidx.compose.ui:ui-text")
 // Compose Compiler for Kotli
+    // ML Kit Text Recognition for OCR
+    implementation("com.google.mlkit:text-recognition:16.0.0-beta5")
 
-
-
+    // Image Picker (for picking images from gallery or camera)
 }
+
+
+
