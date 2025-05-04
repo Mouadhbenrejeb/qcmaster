@@ -15,6 +15,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.rememberNavController
 import com.example.qcmaster.SessionManager
 import com.example.qcmaster.models.professors
 
@@ -142,4 +144,10 @@ fun AuthScreen(navController: NavController) {
             }
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun AuthScreenPreview() {
+    AuthScreen(rememberNavController())
 }

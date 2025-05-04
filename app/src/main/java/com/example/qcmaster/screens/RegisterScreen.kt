@@ -205,4 +205,3 @@ fun RegisterScreen(navController: NavController) {
         }
     }
 }
-

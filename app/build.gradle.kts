@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlinx.serialization)
+    alias(libs.plugins.compose.compiler)
 }
 
 android {
@@ -66,42 +68,22 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation("androidx.navigation:navigation-compose:2.7.7")
+    implementation("androidx.navigation:navigation-compose:2.8.9")
     implementation("androidx.compose.material:material-icons-extended")
 
-    implementation("androidx.compose.ui:ui:1.3.0")
-    implementation("androidx.compose.material3:material3:1.0.0")
-    implementation("androidx.navigation:navigation-compose:2.7.7")
-    implementation("androidx.compose.ui:ui:1.4.0") // Make sure this is the latest version (or 1.3.x if you're using an older version)
-    implementation("androidx.compose.material3:material3:1.0.0") // or the appropriate version for material3
-    implementation("androidx.compose.ui:ui-tooling-preview:1.4.0") // For UI previews
-    implementation("androidx.compose.foundation:foundation:1.4.0") // For layout and other components
-
-    // Ensure you're using Kotlin and Compose Compiler that is compatible
-    implementation("androidx.compose.compiler:compiler:1.4.0")
 // Compose BOM (optional but recommended)
-    implementation("androidx.compose:compose-bom:2024.01.00")
-
-// Core UI libraries
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.material3:material3")
-    implementation("androidx.navigation:navigation-compose:2.7.7")
-
-// Required for KeyboardOptions and other input APIs
-    implementation("androidx.compose.ui:ui-text")
-// Compose Compiler for Kotli
-    // ML Kit Text Recognition for OCR
-    implementation("com.google.mlkit:text-recognition:16.0.0-beta5")
+    implementation(platform(libs.androidx.compose.bom))
 
     // Image Picker (for picking images from gallery or camera)
-    implementation("com.google.mlkit:text-recognition:16.0.0")
-    implementation("com.google.mlkit:text-recognition:16.0.0")
-    implementation("androidx.activity:activity-compose:1.7.2") // for image picker
-    implementation ("androidx.activity:activity-compose:1.8.0")
-    implementation ("com.google.mlkit:text-recognition:16.0.0")
+    implementation("androidx.activity:activity-compose:1.10.1")
+    implementation("com.aallam.openai:openai-client:4.0.1")// Ktor
+    implementation("io.ktor:ktor-client-android:3.1.1")
+    implementation("io.ktor:ktor-client-content-negotiation:3.1.1")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:3.1.1")
+// Kotlinx Serialization
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
     //implementation ("org.opencv:opencv-android:4.5.1")
     //implementation project(':java') // Or ':openCVLibrary' depending on the module name
-
 
 
 }
