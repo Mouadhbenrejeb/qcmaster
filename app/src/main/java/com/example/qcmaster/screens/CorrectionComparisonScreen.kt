@@ -8,39 +8,38 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun CorrectionComparisonScreen() {
-    // Fake answers (simulating scanning)
-    val correctionAnswers = listOf("A", "B", "C", "D", "A")
-    val studentAnswers = listOf("A", "B", "A", "D", "B")
+fun CorrectionComparisonScreen(
+    correctAnswers: List<String>,
+    studentAnswers: List<String>
+) {
+    val total = correctAnswers.size
+    val correctCount = correctAnswers.zip(studentAnswers).count { it.first == it.second }
+    val score = if (total > 0) (correctCount * 100 / total) else 0
 
-    // Calculate score
-    val correctCount = correctionAnswers.zip(studentAnswers).count { it.first == it.second }
-    val totalQuestions = correctionAnswers.size
-    val score = (correctCount.toFloat() / totalQuestions * 100).toInt()
-
-    // UI
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Correction vs Student Answers", style = MaterialTheme.typography.headlineSmall)
+        Text("📊 Correction Results", style = MaterialTheme.typography.headlineSmall)
 
-        correctionAnswers.indices.forEach { index ->
+        correctAnswers.indices.forEach { i ->
+            val correct = correctAnswers.getOrNull(i) ?: "-"
+            val student = studentAnswers.getOrNull(i) ?: "-"
+            val color = if (correct == student) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Q${index + 1}: Correction = ${correctionAnswers[index]}")
-                Text("Student = ${studentAnswers[index]}")
+                Text("Q${i + 1}: $correct", color = color)
+                Text("Student: $student", color = color)
             }
         }
 
         Divider()
-
-        Text("Correct Answers: $correctCount / $totalQuestions")
-        Text("Score: $score%", style = MaterialTheme.typography.headlineMedium)
+        Text("✅ Correct: $correctCount / $total")
+        Text("🎯 Score: $score%", style = MaterialTheme.typography.titleLarge)
     }
 }

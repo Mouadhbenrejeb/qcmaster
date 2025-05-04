@@ -21,4 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "qcm'aster"
 include(":app")
- 
+include(":sdk")

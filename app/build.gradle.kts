@@ -94,7 +94,15 @@ dependencies {
     implementation("com.google.mlkit:text-recognition:16.0.0-beta5")
 
     // Image Picker (for picking images from gallery or camera)
+    implementation("com.google.mlkit:text-recognition:16.0.0")
+    implementation("com.google.mlkit:text-recognition:16.0.0")
+    implementation("androidx.activity:activity-compose:1.7.2") // for image picker
+    implementation ("androidx.activity:activity-compose:1.8.0")
+    implementation ("com.google.mlkit:text-recognition:16.0.0")
+    //implementation ("org.opencv:opencv-android:4.5.1")
+    //implementation project(':java') // Or ':openCVLibrary' depending on the module name
+
+
+
 }
-
-
 

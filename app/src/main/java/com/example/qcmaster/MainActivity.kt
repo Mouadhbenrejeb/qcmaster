@@ -3,6 +3,8 @@ package com.example.qcmaster
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -17,10 +19,20 @@ import com.example.qcmaster.ui.theme.QcmasterTheme
 import com.example.qcmaster.screens.ScanExamScreen
 import com.example.qcmaster.screens.ClassExamsScreen
 import com.example.qcmaster.screens.ExamStudentGradesScreen
+import com.example.qcmaster.screens.CorrectionComparisonScreen
+import android.Manifest
+import android.content.pm.PackageManager
+
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         SessionManager.init(this)
+
+        // ✅ Request camera permission if not granted
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), 1001)
+        }
 
         setContent {
             QcmasterTheme {
@@ -45,11 +57,11 @@ class MainActivity : ComponentActivity() {
                         AssignClassesToExamScreen(navController, examName)
                     }
 
-                    // ✅ Add this:
                     composable("scan_exam/{examName}") { backStackEntry ->
                         val examName = backStackEntry.arguments?.getString("examName") ?: ""
                         ScanExamScreen(navController, examName)
                     }
+
                     composable("class_exams/{className}") { backStackEntry ->
                         val className = backStackEntry.arguments?.getString("className") ?: ""
                         ClassExamsScreen(navController, className)
@@ -62,5 +74,14 @@ class MainActivity : ComponentActivity() {
                     }
 
 
+                    composable("correction_comparison_screen") { backStackEntry ->
+                        val correctAnswers = backStackEntry.savedStateHandle.get<List<String>>("correctAnswers") ?: emptyList()
+                        val scannedAnswers = backStackEntry.savedStateHandle.get<List<String>>("scannedAnswers") ?: emptyList()
+                        CorrectionComparisonScreen(correctAnswers, scannedAnswers)
+                    }
+
                 }
-}}}}
+            }
+        }
+    }
+}
