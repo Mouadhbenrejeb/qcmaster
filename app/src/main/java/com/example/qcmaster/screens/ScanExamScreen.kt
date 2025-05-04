@@ -1,64 +1,100 @@
 package com.example.qcmaster.screens
 
+import android.content.ContentResolver
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
+import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.navigation.NavController
-import com.example.qcmaster.data.FakeExamRepository
-import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.text.TextRecognition
-import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import com.aallam.openai.api.chat.ChatCompletion
+import com.aallam.openai.api.chat.ChatCompletionRequest
+import com.aallam.openai.api.chat.ChatMessage
+import com.aallam.openai.api.chat.ChatRole
+import com.aallam.openai.api.model.ModelId
+import com.aallam.openai.client.OpenAI
+import com.example.qcmaster.ai.extractAnswers
+import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
+
 @Composable
 fun ScanExamScreen(
     navController: NavController,
-    examName: String
+    examName: String,
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     var correctAnswers by remember { mutableStateOf<List<String>?>(null) }
     var currentPhotoUri by remember { mutableStateOf<Uri?>(null) }
     var isScanningCorrect by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+    var bitmap by remember {
+        mutableStateOf<ImageBitmap?>(null)
+    }
+
+    var isLoading by remember {
+        mutableStateOf(false)
+    }
+
+    fun getExamAnswers(bitmap: Bitmap) {
+        scope.launch {
+            isLoading = true
+            runCatching {
+                extractAnswers(
+                    apiKey = "",
+                    answerKeyBitmap = bitmap,
+                )
+            }
+                .onSuccess { answers ->
+                    println("Answers: $answers")
+                }
+                .onFailure {
+                    it.printStackTrace()
+                }
+
+            isLoading = false
+
+        }
+    }
 
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success && currentPhotoUri != null) {
-            val image = InputImage.fromFilePath(context, currentPhotoUri!!)
-            recognizer.process(image)
-                .addOnSuccessListener { visionText ->
-                    val answers = visionText.text
-                        .split(" ", "\n")
-                        .map { it.trim().uppercase() }
-                        .filter { it in listOf("A", "B", "C", "D") }
-
-                    if (isScanningCorrect) {
-                        correctAnswers = answers
-                        FakeExamRepository.saveCorrectAnswers(examName, answers)
-                        errorMessage = null
+            currentPhotoUri?.let { uri ->
+                try {
+                    val bitmap = if (Build.VERSION.SDK_INT < 28) {
+                        MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
                     } else {
-                        val correct = correctAnswers ?: emptyList()
-                        navController.currentBackStackEntry?.savedStateHandle?.set("correctAnswers", correct)
-                        navController.currentBackStackEntry?.savedStateHandle?.set("scannedAnswers", answers)
-                        navController.navigate("correction_comparison_screen")
+                        val source = ImageDecoder.createSource(context.contentResolver, uri)
+                        ImageDecoder.decodeBitmap(source)
                     }
+
+                    getExamAnswers(
+                        bitmap = bitmap,
+                    )
+                } catch (e: java.lang.Exception) {
+                    e.printStackTrace()
                 }
-                .addOnFailureListener {
-                    errorMessage = "❌ Failed to scan the paper. Please try again."
-                }
+            }
         } else {
             errorMessage = "❌ Camera cancelled or failed."
         }
@@ -114,6 +150,20 @@ fun ScanExamScreen(
             ) {
                 Text("👨‍🎓 Scan Student Paper")
             }
+        }
+
+        bitmap?.let {
+            Image(
+                bitmap = it,
+                contentDescription = null,
+                contentScale = ContentScale.FillWidth,
+                modifier = Modifier
+                    .fillMaxWidth()
+            )
+        }
+
+        if (isLoading) {
+            CircularProgressIndicator()
         }
 
         errorMessage?.let {

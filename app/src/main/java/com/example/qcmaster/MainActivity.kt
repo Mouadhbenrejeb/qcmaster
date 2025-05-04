@@ -22,6 +22,7 @@ import com.example.qcmaster.screens.ExamStudentGradesScreen
 import com.example.qcmaster.screens.CorrectionComparisonScreen
 import android.Manifest
 import android.content.pm.PackageManager
+import com.example.qcmaster.SessionManager.profEmail
 
 class MainActivity : ComponentActivity() {
 
@@ -38,13 +39,22 @@ class MainActivity : ComponentActivity() {
             QcmasterTheme {
                 val navController = rememberNavController()
 
-                NavHost(navController = navController, startDestination = "auth") {
+                NavHost(
+                    navController = navController,
+                    startDestination = "home"
+                ) {
                     composable("auth") { AuthScreen(navController) }
                     composable("register") { RegisterScreen(navController) }
 
                     composable("home/{profName}/{profEmail}") { backStackEntry ->
                         val profName = backStackEntry.arguments?.getString("profName") ?: "Unknown"
                         val profEmail = backStackEntry.arguments?.getString("profEmail") ?: "Unknown"
+                        HomeScreen(profName, profEmail, navController)
+                    }
+
+                    composable("home") { backStackEntry ->
+                        val profName = "Unknown"
+                        val profEmail = "test@test.com"
                         HomeScreen(profName, profEmail, navController)
                     }
 

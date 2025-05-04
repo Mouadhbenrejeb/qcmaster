@@ -11,11 +11,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.qcmaster.components.MyNavigationBar
 import com.example.qcmaster.data.FakeClassRepository
 import com.example.qcmaster.data.FakeStudentRepository
+import com.example.qcmaster.ui.screens.AuthScreen
 
 @Composable
 fun ClassesScreen(navController: NavController) {
@@ -149,4 +152,10 @@ fun ClassesScreen(navController: NavController) {
             )
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ClassesScreenPreview() {
+    ClassesScreen(rememberNavController())
 }
