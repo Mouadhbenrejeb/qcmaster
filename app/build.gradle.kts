@@ -1,3 +1,7 @@
+import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -22,13 +26,31 @@ android {
         }
     }
 
+    // Read API key from local.properties
+    val localProperties = Properties()
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localProperties.load(FileInputStream(localPropertiesFile))
+    }
+
     buildTypes {
+        debug {
+            buildConfigField("String", "API_KEY", "\"${localProperties.getProperty("API_KEY", "")}\"")
+        }
+
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
+            if (localPropertiesFile.exists()) {
+                localProperties.load(FileInputStream(localPropertiesFile))
+                buildConfigField("String", "API_KEY", "\"${localProperties.getProperty("key", "")}\"")
+            } else {
+                buildConfigField("String", "API_KEY", "\"\"")
+            }
         }
     }
     compileOptions {
@@ -40,6 +62,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -76,7 +99,6 @@ dependencies {
 
     // Image Picker (for picking images from gallery or camera)
     implementation("androidx.activity:activity-compose:1.10.1")
-    implementation("com.aallam.openai:openai-client:4.0.1")// Ktor
     implementation("io.ktor:ktor-client-android:3.1.1")
     implementation("io.ktor:ktor-client-content-negotiation:3.1.1")
     implementation("io.ktor:ktor-serialization-kotlinx-json:3.1.1")
@@ -87,4 +109,3 @@ dependencies {
 
 
 }
-
