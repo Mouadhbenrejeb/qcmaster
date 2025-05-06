@@ -1,6 +1,5 @@
 package com.example.qcmaster.screens
 
-import android.content.ContentResolver
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
@@ -11,23 +10,29 @@ import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.navigation.NavController
-import com.aallam.openai.api.chat.ChatCompletion
-import com.aallam.openai.api.chat.ChatCompletionRequest
-import com.aallam.openai.api.chat.ChatMessage
-import com.aallam.openai.api.chat.ChatRole
-import com.aallam.openai.api.model.ModelId
-import com.aallam.openai.client.OpenAI
+import com.example.qcmaster.BuildConfig
 import com.example.qcmaster.ai.extractAnswers
 import kotlinx.coroutines.launch
 import java.io.File
@@ -43,7 +48,7 @@ fun ScanExamScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    var correctAnswers by remember { mutableStateOf<List<String>?>(null) }
+    var correctAnswers by remember { mutableStateOf(emptyMap<String, String>()) }
     var currentPhotoUri by remember { mutableStateOf<Uri?>(null) }
     var isScanningCorrect by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -61,11 +66,12 @@ fun ScanExamScreen(
             isLoading = true
             runCatching {
                 extractAnswers(
-                    apiKey = "",
+                    apiKey = BuildConfig.API_KEY,
                     answerKeyBitmap = bitmap,
                 )
             }
                 .onSuccess { answers ->
+                    correctAnswers = answers
                     println("Answers: $answers")
                 }
                 .onFailure {
@@ -100,6 +106,28 @@ fun ScanExamScreen(
         }
     }
 
+    val imagePickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        if (uri != null) {
+            try {
+                val bitmap = if (Build.VERSION.SDK_INT < 28) {
+                    MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+                } else {
+                    val source = ImageDecoder.createSource(context.contentResolver, uri)
+                    ImageDecoder.decodeBitmap(source)
+                }
+
+                getExamAnswers(
+                    bitmap = bitmap,
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+                errorMessage = "❌ Failed to load selected image."
+            }
+        } else {
+            errorMessage = "❌ Image selection cancelled or failed."
+        }
+    }
+
     fun createImageFile(context: Context): Uri? {
         return try {
             val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
@@ -116,7 +144,7 @@ fun ScanExamScreen(
         Text("📄 Scanning for Exam: $examName", style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(24.dp))
 
-        if (correctAnswers == null) {
+        if (correctAnswers.isEmpty()) {
             Button(
                 onClick = {
                     isScanningCorrect = true
@@ -130,25 +158,33 @@ fun ScanExamScreen(
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("📷 Scan Correct Paper")
+                Text("📷 Scan Correct Paper with Camera")
             }
-        } else {
-            Text("✅ Correct answers saved: ${correctAnswers!!.joinToString()}")
-            Spacer(modifier = Modifier.height(16.dp))
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             Button(
                 onClick = {
-                    isScanningCorrect = false
-                    val uri = createImageFile(context)
-                    if (uri != null) {
-                        currentPhotoUri = uri
-                        cameraLauncher.launch(uri)
-                    } else {
-                        errorMessage = "❌ Failed to create image file."
-                    }
+                    isScanningCorrect = true
+                    imagePickerLauncher.launch("image/*")
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("👨‍🎓 Scan Student Paper")
+                Text("🖼️ Pick Image from Gallery")
+            }
+        } else {
+            Text("✅ Correct answers saved:")
+            correctAnswers.forEach { (key, value) ->
+                Text("question number $key: answer number $value")
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = {
+                    correctAnswers = emptyMap()
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Clear answers")
             }
         }
 
