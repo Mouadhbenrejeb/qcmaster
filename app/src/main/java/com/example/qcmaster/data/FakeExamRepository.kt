@@ -5,8 +5,12 @@ import androidx.compose.runtime.mutableStateMapOf
 
 
 object FakeExamRepository {
-    var exams = mutableStateListOf<String>()
-    private val examClassMap = mutableStateMapOf<String, List<String>>()
+    var exams = mutableStateListOf<String>(
+        "Math Exam",
+    )
+    private val examClassMap = mutableStateMapOf<String, List<String>>(
+        "Math Exam" to listOf("Class A", "Class B"),
+    )
 
     private val correctAnswersMap = mutableStateMapOf<String, List<String>>() // exam -> correct answers
     private val studentAnswersMap = mutableStateMapOf<String, MutableMap<String, List<String>>>() // exam -> (studentCIN -> answers)
