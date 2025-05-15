@@ -104,7 +104,9 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json:3.1.1")
 // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
-    //implementation ("org.opencv:opencv-android:4.5.1")
+
+//    implementation("org.bytedeco:opencv:4.10.0-1.5.11")
+    implementation ("org.opencv:opencv:4.10.0")
     //implementation project(':java') // Or ':openCVLibrary' depending on the module name
 
 
