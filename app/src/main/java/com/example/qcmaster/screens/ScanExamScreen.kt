@@ -26,14 +26,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.navigation.NavController
-import com.example.qcmaster.BuildConfig
-import com.example.qcmaster.ai.extractAnswers
+import com.example.qcmaster.ai.Circle
+import com.example.qcmaster.ai.extractAnswersOpenCv
 import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
@@ -49,6 +54,7 @@ fun ScanExamScreen(
     val scope = rememberCoroutineScope()
 
     var correctAnswers by remember { mutableStateOf(emptyMap<String, String>()) }
+    var circles by remember { mutableStateOf(emptyList<Circle>()) }
     var currentPhotoUri by remember { mutableStateOf<Uri?>(null) }
     var isScanningCorrect by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -61,18 +67,26 @@ fun ScanExamScreen(
         mutableStateOf(false)
     }
 
-    fun getExamAnswers(bitmap: Bitmap) {
+    fun getExamAnswers(answerBitmap: Bitmap) {
         scope.launch {
             isLoading = true
             runCatching {
-                extractAnswers(
-                    apiKey = BuildConfig.API_KEY,
-                    answerKeyBitmap = bitmap,
+
+//                extractAnswers(
+//                    apiKey = BuildConfig.API_KEY,
+//                    answerKeyBitmap = bitmap,
+//                )
+                extractAnswersOpenCv(
+                    answerKeyBitmap = answerBitmap
                 )
             }
-                .onSuccess { answers ->
-                    correctAnswers = answers
-                    println("Answers: $answers")
+                .onSuccess { result ->
+                    correctAnswers = result.answers
+                        .mapKeys { it.toString() }
+                        .mapValues { it.toString() }
+
+                    circles = result.circles
+                    bitmap = result.bitmap?.asImageBitmap()
                 }
                 .onFailure {
                     it.printStackTrace()
@@ -95,7 +109,7 @@ fun ScanExamScreen(
                     }
 
                     getExamAnswers(
-                        bitmap = bitmap,
+                        answerBitmap = bitmap,
                     )
                 } catch (e: java.lang.Exception) {
                     e.printStackTrace()
@@ -117,7 +131,7 @@ fun ScanExamScreen(
                 }
 
                 getExamAnswers(
-                    bitmap = bitmap,
+                    answerBitmap = bitmap,
                 )
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -174,13 +188,15 @@ fun ScanExamScreen(
             }
         } else {
             Text("✅ Correct answers saved:")
-            correctAnswers.forEach { (key, value) ->
-                Text("question number $key: answer number $value")
-            }
+//            correctAnswers.forEach { (key, value) ->
+//                Text("question number $key: answer number $value")
+//            }
             Spacer(modifier = Modifier.height(16.dp))
             Button(
                 onClick = {
                     correctAnswers = emptyMap()
+                    circles = emptyList()
+                    bitmap = null
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -195,6 +211,30 @@ fun ScanExamScreen(
                 contentScale = ContentScale.FillWidth,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .drawWithContent {
+                        drawContent()
+
+                        val scaleX = size.width / it.width
+                        val scaleY = size.height / it.height
+
+                        circles.forEach { circle ->
+                            val radius = circle.radius * scaleX
+                            val centerX = (circle.center.x * scaleX).toFloat()
+                            val centerY = (circle.center.y * scaleY).toFloat()
+
+                            drawCircle(
+                                color = Color.Red,
+                                radius = radius,
+                                center = Offset(
+                                    x = centerX,
+                                    y = centerY
+                                ),
+                                style = Stroke(
+                                    width = 2.dp.toPx()
+                                )
+                            )
+                        }
+                    }
             )
         }
 

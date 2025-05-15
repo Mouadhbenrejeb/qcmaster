@@ -23,6 +23,8 @@ import com.example.qcmaster.screens.CorrectionComparisonScreen
 import android.Manifest
 import android.content.pm.PackageManager
 import com.example.qcmaster.SessionManager.profEmail
+import org.opencv.android.OpenCVLoader
+import org.opencv.osgi.OpenCVNativeLoader
 
 class MainActivity : ComponentActivity() {
 
@@ -34,6 +36,8 @@ class MainActivity : ComponentActivity() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), 1001)
         }
+
+        OpenCVLoader.initLocal()
 
         setContent {
             QcmasterTheme {
