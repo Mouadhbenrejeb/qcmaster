@@ -1,207 +1,391 @@
+package com.example.qcmaster.screens
 
-package com.example.qcmaster.ui.screens
-
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import com.example.qcmaster.data.ProfessorRepository
-import com.example.qcmaster.models.Professor
-import com.example.qcmaster.models.professors
-import com.example.qcmaster.SessionManager
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.qcmaster.R
+import com.example.qcmaster.ui.theme.QcmasterTheme
+import com.example.qcmaster.viewmodels.RegisterUiState
+import com.example.qcmaster.viewmodels.RegisterViewModel
 
-
-fun isValidEmail(email: String): Boolean {
-    return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
-}
 @Composable
-fun RegisterScreen(navController: NavController) {
-    var cin by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
-    var name by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") } // ✨ New email field
+fun RegisterScreen(
+    onNavigateToHome: () -> Unit = {},
+    onNavigateToLogin: () -> Unit = {},
+) {
+    val viewModel: RegisterViewModel = viewModel()
 
-    val cinHasError = cin.isNotEmpty() && cin.length != 8
-    val passwordHasError = password.isNotEmpty() && password.length < 6
-    val confirmPasswordHasError = confirmPassword.isNotEmpty() && confirmPassword != password
-   // val isFormValid = cin.length == 8 && password.length >= 6 && name.isNotBlank() && email.isNotBlank()
+    RegisterScreenContent(
+        state = viewModel.state,
+        onNameChanged = viewModel.onNameChanged,
+        onEmailChanged = viewModel.onEmailChanged,
+        onCinChanged = viewModel.onCinChanged,
+        onPasswordChanged = viewModel.onPasswordChanged,
+        onConfirmPasswordChanged = viewModel.onConfirmPasswordChanged,
+        onTogglePasswordVisibility = viewModel.onTogglePasswordVisibility,
+        onToggleConfirmPasswordVisibility = viewModel.onToggleConfirmPasswordVisibility,
+        onRegister = { viewModel.onRegister(onNavigateToHome) },
+        onNavigateToLogin = onNavigateToLogin
+    )
+}
 
-    var cinExistsError by remember { mutableStateOf(false) }
-    var passwordVisible by remember { mutableStateOf(false) }
-    var confirmPasswordVisible by remember { mutableStateOf(false) }
+@Composable
+fun RegisterScreenContent(
+    state: RegisterUiState,
+    onNameChanged: (String) -> Unit,
+    onEmailChanged: (String) -> Unit,
+    onCinChanged: (String) -> Unit,
+    onPasswordChanged: (String) -> Unit,
+    onConfirmPasswordChanged: (String) -> Unit,
+    onTogglePasswordVisibility: () -> Unit,
+    onToggleConfirmPasswordVisibility: () -> Unit,
+    onRegister: () -> Unit,
+    onNavigateToLogin: () -> Unit
+) {
+    val scrollState = rememberScrollState()
 
-    val emailHasError = email.isNotEmpty() && !isValidEmail(email)
-    val isFormValid = cin.length == 8 && password.length >= 6 && isValidEmail(email)
-
-
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        contentAlignment = Alignment.Center
     ) {
-        Text("Register Professor", fontSize = 22.sp)
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // --- CIN Field ---
-        OutlinedTextField(
-            value = cin,
-            onValueChange = {
-                if (it.length <= 8 && it.all { char -> char.isDigit() }) {
-                    cin = it
-                }
-            },
-            label = { Text("CIN") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            isError = cinHasError
-        )
-        if (cinHasError) {
-            Text(
-                text = "CIN must be exactly 8 digits",
-                color = MaterialTheme.colorScheme.error,
-                fontSize = 12.sp,
-                modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(scrollState)
+        ) {
+            // App Logo or Icon
+            Image(
+                painter = painterResource(id = R.drawable.qcm_logo),
+                contentDescription = "App Logo",
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(RoundedCornerShape(16.dp))
             )
-        }
-        if (cinExistsError) {
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Title
             Text(
-                text = "This CIN is already registered.",
-                color = MaterialTheme.colorScheme.error,
-                fontSize = 12.sp,
-                modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                text = "Create Account",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
             )
-        }
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // --- Password Field ---
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") },
-            singleLine = true,
-            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            isError = passwordHasError,
-            trailingIcon = {
-                val icon = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(imageVector = icon, contentDescription = null)
-                }
-            }
-        )
-        if (passwordHasError) {
             Text(
-                text = "Password must be at least 6 characters",
-                color = MaterialTheme.colorScheme.error,
-                fontSize = 12.sp,
-                modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                text = "Sign up to get started",
+                fontSize = 16.sp,
+                color = Color.Gray,
+                modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
             )
-        }
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // --- Confirm Password Field ---
-        OutlinedTextField(
-            value = confirmPassword,
-            onValueChange = { confirmPassword = it },
-            label = { Text("Confirm Password") },
-            singleLine = true,
-            visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            isError = confirmPasswordHasError,
-            trailingIcon = {
-                val icon = if (confirmPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
-                    Icon(imageVector = icon, contentDescription = null)
-                }
-            }
-        )
-        if (confirmPasswordHasError) {
-            Text(
-                text = "Passwords do not match",
-                color = MaterialTheme.colorScheme.error,
-                fontSize = 12.sp,
-                modifier = Modifier.padding(top = 4.dp, start = 4.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // --- Register Button ---
-        Button(
-            onClick = {
-                cinExistsError = false
-                if (isFormValid && confirmPassword == password) {
-                    val registrationSuccess = ProfessorRepository.register(
-                        Professor(cin = cin, password = password, name = name, email = email) // Save email too!
+            // Name Field
+            OutlinedTextField(
+                value = state.name,
+                onValueChange = onNameChanged,
+                label = { Text("Full Name") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Person,
+                        contentDescription = "Name Icon",
+                        tint = MaterialTheme.colorScheme.primary
                     )
+                },
+                singleLine = true,
+                isError = state.nameHasError,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            )
 
-                    if (registrationSuccess) {
-                        professors.add(Professor(cin, password, name, email)) // Don't forget to modify your Professor model
-                        SessionManager.profName = name
-                        SessionManager.profEmail = email
-                        navController.navigate("home/$name/$email")
+            if (state.nameHasError) {
+                Text(
+                    text = "Name must be at least 2 characters",
+                    color = MaterialTheme.colorScheme.error,
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .padding(top = 4.dp, start = 4.dp)
+                        .align(Alignment.Start)
+                )
+            }
 
+            Spacer(modifier = Modifier.height(16.dp))
 
-                    } else {
-                        cinExistsError = true
+            // Email Field
+            OutlinedTextField(
+                value = state.email,
+                onValueChange = onEmailChanged,
+                label = { Text("Email") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Email,
+                        contentDescription = "Email Icon",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
+                singleLine = true,
+                isError = state.emailHasError,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            if (state.emailHasError) {
+                Text(
+                    text = "Invalid email format",
+                    color = MaterialTheme.colorScheme.error,
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .padding(top = 4.dp, start = 4.dp)
+                        .align(Alignment.Start)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // CIN Field
+            OutlinedTextField(
+                value = state.cin,
+                onValueChange = onCinChanged,
+                label = { Text("CIN") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Badge,
+                        contentDescription = "CIN Icon",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                isError = state.cinHasError || state.cinExistsError,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            if (state.cinHasError) {
+                Text(
+                    text = "CIN must be exactly 8 digits",
+                    color = MaterialTheme.colorScheme.error,
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .padding(top = 4.dp, start = 4.dp)
+                        .align(Alignment.Start)
+                )
+            }
+
+            if (state.cinExistsError) {
+                Text(
+                    text = "This CIN is already registered",
+                    color = MaterialTheme.colorScheme.error,
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .padding(top = 4.dp, start = 4.dp)
+                        .align(Alignment.Start)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Password Field
+            OutlinedTextField(
+                value = state.password,
+                onValueChange = onPasswordChanged,
+                label = { Text("Password") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Lock,
+                        contentDescription = "Password Icon",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
+                singleLine = true,
+                visualTransformation = if (state.passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                isError = state.passwordHasError,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                trailingIcon = {
+                    val icon = if (state.passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                    IconButton(onClick = onTogglePasswordVisibility) {
+                        Icon(imageVector = icon, contentDescription = null)
                     }
                 }
-            }
-        ) {
-            Text("Register")
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // --- Name Field ---
-        OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text("Name") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // --- Email Field ---
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") },
-            singleLine = true,
-            isError = emailHasError
-        )
-
-        if (emailHasError) {
-            Text(
-                text = "Invalid email format",
-                color = MaterialTheme.colorScheme.error,
-                fontSize = 12.sp,
-                modifier = Modifier.padding(top = 4.dp, start = 4.dp)
             )
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            if (state.passwordHasError) {
+                Text(
+                    text = "Password must be at least 6 characters",
+                    color = MaterialTheme.colorScheme.error,
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .padding(top = 4.dp, start = 4.dp)
+                        .align(Alignment.Start)
+                )
+            }
 
-        // --- Login Redirect ---
-        TextButton(onClick = { navController.popBackStack() }) {
-            Text("Already have an account? Login", color = MaterialTheme.colorScheme.primary)
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Confirm Password Field
+            OutlinedTextField(
+                value = state.confirmPassword,
+                onValueChange = onConfirmPasswordChanged,
+                label = { Text("Confirm Password") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Lock,
+                        contentDescription = "Confirm Password Icon",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
+                singleLine = true,
+                visualTransformation = if (state.confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                isError = state.confirmPasswordHasError,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                trailingIcon = {
+                    val icon = if (state.confirmPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                    IconButton(onClick = onToggleConfirmPasswordVisibility) {
+                        Icon(imageVector = icon, contentDescription = null)
+                    }
+                }
+            )
+
+            if (state.confirmPasswordHasError) {
+                Text(
+                    text = "Passwords do not match",
+                    color = MaterialTheme.colorScheme.error,
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .padding(top = 4.dp, start = 4.dp)
+                        .align(Alignment.Start)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Register Button
+            Button(
+                onClick = onRegister,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp),
+                enabled = state.isFormValid && !state.isLoading
+            ) {
+                if (state.isLoading) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    Text("Sign Up", fontSize = 16.sp)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Login Link
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Already have an account?")
+                TextButton(
+                    onClick = onNavigateToLogin
+                ) {
+                    Text(
+                        "Sign In", 
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+}
+
+@Preview(name = "Light Mode")
+@Composable
+private fun RegisterScreenLightPreview() {
+    QcmasterTheme(darkTheme = false) {
+        // Create a dummy state for preview
+        val dummyState = RegisterUiState(
+            name = "John Doe",
+            email = "john@example.com",
+            cin = "12345678",
+            password = "password",
+            confirmPassword = "password",
+            isFormValid = true
+        )
+
+        RegisterScreenContent(
+            state = dummyState,
+            onNameChanged = {},
+            onEmailChanged = {},
+            onCinChanged = {},
+            onPasswordChanged = {},
+            onConfirmPasswordChanged = {},
+            onTogglePasswordVisibility = {},
+            onToggleConfirmPasswordVisibility = {},
+            onRegister = {},
+            onNavigateToLogin = {}
+        )
+    }
+}
+
+@Preview(name = "Dark Mode")
+@Composable
+private fun RegisterScreenDarkPreview() {
+    QcmasterTheme(darkTheme = true) {
+        // Create a dummy state for preview
+        val dummyState = RegisterUiState(
+            name = "John Doe",
+            email = "john@example.com",
+            cin = "12345678",
+            password = "password",
+            confirmPassword = "password",
+            isFormValid = true
+        )
+
+        RegisterScreenContent(
+            state = dummyState,
+            onNameChanged = {},
+            onEmailChanged = {},
+            onCinChanged = {},
+            onPasswordChanged = {},
+            onConfirmPasswordChanged = {},
+            onTogglePasswordVisibility = {},
+            onToggleConfirmPasswordVisibility = {},
+            onRegister = {},
+            onNavigateToLogin = {}
+        )
     }
 }

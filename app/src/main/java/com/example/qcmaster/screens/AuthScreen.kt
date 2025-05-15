@@ -1,153 +1,273 @@
-package com.example.qcmaster.ui.screens
+package com.example.qcmaster.screens
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.compose.rememberNavController
-import com.example.qcmaster.SessionManager
-import com.example.qcmaster.models.professors
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.qcmaster.R
+import com.example.qcmaster.ui.theme.QcmasterTheme
+import com.example.qcmaster.viewmodels.AuthUiState
+import com.example.qcmaster.viewmodels.AuthViewModel
 
 @Composable
-fun AuthScreen(navController: NavController) {
-    var cin by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    val cinHasError = cin.isNotEmpty() && cin.length != 8
-    val passwordHasError = password.isNotEmpty() && password.length < 6
-    val isFormValid = cin.length == 8 && password.length >= 6
-    var loginError by remember { mutableStateOf(false) }
-    var passwordVisible by remember { mutableStateOf(false) }
-    val prof = professors.find { it.cin == cin && it.password == password }
-    var errorMessage by remember { mutableStateOf("") }
+fun AuthScreen(
+    onNavigateToHome: () -> Unit = {},
+    onNavigateToRegister: () -> Unit = {},
+) {
+    val viewModel: AuthViewModel = viewModel()
 
-    Column(
+    AuthScreenContent(
+        state = viewModel.state,
+        onCinChanged = viewModel.onCinChanged,
+        onPasswordChanged = viewModel.onPasswordChanged,
+        onTogglePasswordVisibility = viewModel.onTogglePasswordVisibility,
+        onLogin = { viewModel.onLogin(onNavigateToHome) },
+        onNavigateToRegister = onNavigateToRegister
+    )
+}
+
+@Composable
+fun AuthScreenContent(
+    state: AuthUiState,
+    onCinChanged: (String) -> Unit,
+    onPasswordChanged: (String) -> Unit,
+    onTogglePasswordVisibility: () -> Unit,
+    onLogin: () -> Unit,
+    onNavigateToRegister: () -> Unit
+) {
+    Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        contentAlignment = Alignment.Center
     ) {
-        Text("Professor Login", fontSize = 22.sp)
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // CIN TextField
-        OutlinedTextField(
-            value = cin,
-            onValueChange = {
-                if (it.length <= 8 && it.all { char -> char.isDigit() }) {
-                    cin = it
-                }
-            },
-            label = { Text("CIN") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            isError = cinHasError
-        )
-        if (cinHasError) {
-            Text(
-                text = "CIN must be exactly 8 digits",
-                color = MaterialTheme.colorScheme.error,
-                fontSize = 12.sp,
-                modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            // App Logo or Icon
+            Image(
+                painter = painterResource(id = R.drawable.qcm_logo),
+                contentDescription = "App Logo",
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(RoundedCornerShape(16.dp))
             )
-        }
 
-        Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-        // Password TextField
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") },
-            singleLine = true,
-            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            isError = passwordHasError,
-            trailingIcon = {
-                val icon = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                val description = if (passwordVisible) "Hide password" else "Show password"
+            // Title
+            Text(
+                text = "Welcome Back",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
 
-                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(imageVector = icon, contentDescription = description)
-                }
+            Text(
+                text = "Sign in to continue",
+                fontSize = 16.sp,
+                color = Color.Gray,
+                modifier = Modifier.padding(top = 8.dp, bottom = 32.dp)
+            )
+
+            // CIN TextField
+            OutlinedTextField(
+                value = state.cin,
+                onValueChange = onCinChanged,
+                label = { Text("CIN") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Person,
+                        contentDescription = "CIN Icon",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                isError = state.cinHasError,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            if (state.cinHasError) {
+                Text(
+                    text = "CIN must be exactly 8 digits",
+                    color = MaterialTheme.colorScheme.error,
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .padding(top = 4.dp, start = 4.dp)
+                        .align(Alignment.Start)
+                )
             }
-        )
 
-        if (loginError) {
-            Text(
-                text = "Invalid CIN or password.",
-                color = MaterialTheme.colorScheme.error,
-                fontSize = 12.sp,
-                modifier = Modifier.padding(top = 4.dp, start = 4.dp)
-            )
-        }
+            Spacer(modifier = Modifier.height(16.dp))
 
-        if (passwordHasError) {
-            Text(
-                text = "Password must be at least 6 characters",
-                color = MaterialTheme.colorScheme.error,
-                fontSize = 12.sp,
-                modifier = Modifier.padding(top = 4.dp, start = 4.dp)
-            )
-        }
+            // Password TextField
+            OutlinedTextField(
+                value = state.password,
+                onValueChange = onPasswordChanged,
+                label = { Text("Password") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Lock,
+                        contentDescription = "Password Icon",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
+                singleLine = true,
+                visualTransformation = if (state.passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                isError = state.passwordHasError,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                trailingIcon = {
+                    val icon = if (state.passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                    val description = if (state.passwordVisible) "Hide password" else "Show password"
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Continue Button for login
-        Button(
-            onClick = {
-                loginError = false
-                if (cin.length == 8 && password.length >= 6) {
-                    val professor = professors.find { it.cin == cin && it.password == password }
-
-                    if (professor != null) {
-                        // Save the session using SessionManager
-                        SessionManager.saveSession(professor.email, professor.name)
-
-                        // Navigate to home screen
-                        navController.navigate("home/${professor.name}/${professor.email}") {
-                            popUpTo("auth") { inclusive = true }
-                        }
-                    } else {
-                        loginError = true
+                    IconButton(onClick = onTogglePasswordVisibility) {
+                        Icon(imageVector = icon, contentDescription = description)
                     }
                 }
+            )
+
+            if (state.loginError) {
+                Text(
+                    text = "Invalid CIN or password.",
+                    color = MaterialTheme.colorScheme.error,
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .padding(top = 4.dp, start = 4.dp)
+                        .align(Alignment.Start)
+                )
             }
-        ) {
-            Text("Continue")
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            if (state.passwordHasError) {
+                Text(
+                    text = "Password must be at least 6 characters",
+                    color = MaterialTheme.colorScheme.error,
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .padding(top = 4.dp, start = 4.dp)
+                        .align(Alignment.Start)
+                )
+            }
 
-        // "If you don't have an account" phrase and Register button
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("If you don't have an account, ")
-            TextButton(
-                contentPadding = PaddingValues(0.dp),
-                onClick = { navController.navigate("register") }
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Login Button
+            Button(
+                onClick = onLogin,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp),
+                enabled = state.isFormValid && !state.isLoading
             ) {
-                Text("Register", color = MaterialTheme.colorScheme.primary)
+                if (state.isLoading) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    Text("Sign In", fontSize = 16.sp)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Register Link
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Don't have an account?")
+                TextButton(
+                    onClick = onNavigateToRegister
+                ) {
+                    Text(
+                        "Sign Up",
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }
 }
 
-@Preview(showBackground = true)
+@Preview(name = "Light Mode")
 @Composable
-private fun AuthScreenPreview() {
-    AuthScreen(rememberNavController())
+private fun AuthScreenLightPreview() {
+    QcmasterTheme(darkTheme = false) {
+        // Create a dummy state for preview
+        val dummyState = AuthUiState(
+            cin = "12345678",
+            password = "password",
+            loginError = false,
+            passwordVisible = false,
+            isLoading = false,
+            cinHasError = false,
+            passwordHasError = false,
+            isFormValid = true
+        )
+
+        AuthScreenContent(
+            state = dummyState,
+            onCinChanged = {},
+            onPasswordChanged = {},
+            onTogglePasswordVisibility = {},
+            onLogin = {},
+            onNavigateToRegister = {}
+        )
+    }
+}
+
+@Preview(name = "Dark Mode")
+@Composable
+private fun AuthScreenDarkPreview() {
+    QcmasterTheme(darkTheme = true) {
+        // Create a dummy state for preview
+        val dummyState = AuthUiState(
+            cin = "12345678",
+            password = "password",
+            loginError = false,
+            passwordVisible = false,
+            isLoading = false,
+            cinHasError = false,
+            passwordHasError = false,
+            isFormValid = true
+        )
+
+        AuthScreenContent(
+            state = dummyState,
+            onCinChanged = {},
+            onPasswordChanged = {},
+            onTogglePasswordVisibility = {},
+            onLogin = {},
+            onNavigateToRegister = {}
+        )
+    }
 }

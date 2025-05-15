@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "724440723477",
+    "project_id": "fuel-stations-bd73e",
+    "storage_bucket": "fuel-stations-bd73e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:724440723477:android:cd1ba4b0e3e8cf986a1e1c",
+        "android_client_info": {
+          "package_name": "com.example.qcmaster"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC-rba75Re9QUjXLOsIDpHIo_3Q-4xMoQk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:724440723477:android:7a35f4251fa5c2116a1e1c",
+        "android_client_info": {
+          "package_name": "com.tasnimjamezi.fuelstations"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC-rba75Re9QUjXLOsIDpHIo_3Q-4xMoQk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
