@@ -1,0 +1,157 @@
+package com.example.qcmaster.viewmodels
+
+import android.graphics.Bitmap
+import android.net.Uri
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.qcmaster.data.FirebaseExamRepository
+import com.example.qcmaster.data.FirebaseStudentRepository
+import com.example.qcmaster.models.Exam
+import com.example.qcmaster.models.Student
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+
+data class ExamCorrectionPaperUploadUiState(
+    val exam: Exam? = null,
+    val student: Student? = null,
+    val className: String = "",
+    val isLoading: Boolean = true,
+    val error: String? = null,
+    val examPaperUri: Uri? = null,
+    val examPaperBitmap: Bitmap? = null,
+    val isUploading: Boolean = false,
+    val uploadSuccess: Boolean = false,
+    val uploadError: String? = null
+)
+
+class ExamCorrectionPaperUploadViewModel(
+    private val examId: String,
+    private val className: String,
+    private val studentId: String
+) : ViewModel() {
+    private val examRepository = FirebaseExamRepository.getInstance()
+    private val studentRepository = FirebaseStudentRepository.getInstance()
+
+    var state by mutableStateOf(ExamCorrectionPaperUploadUiState(className = className))
+        private set
+
+    init {
+        loadExam()
+        loadStudent()
+    }
+
+    private fun loadExam() {
+        viewModelScope.launch {
+            try {
+                examRepository.exams.collectLatest { exams ->
+                    val exam = exams.find { it.id == examId }
+                    if (exam != null) {
+                        state = state.copy(
+                            exam = exam,
+                            isLoading = false
+                        )
+                    } else {
+                        state = state.copy(
+                            error = "Exam not found",
+                            isLoading = false
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                state = state.copy(
+                    error = "Error loading exam: ${e.message}",
+                    isLoading = false
+                )
+            }
+        }
+    }
+
+    private fun loadStudent() {
+        viewModelScope.launch {
+            try {
+                studentRepository.students.collectLatest { students ->
+                    val student = students.find { it.cin == studentId }
+                    if (student != null) {
+                        state = state.copy(
+                            student = student,
+                            isLoading = false
+                        )
+                    } else {
+                        state = state.copy(
+                            error = "Student not found",
+                            isLoading = false
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                state = state.copy(
+                    error = "Error loading student: ${e.message}",
+                    isLoading = false
+                )
+            }
+        }
+    }
+
+    fun onExamPaperUriChanged(uri: Uri?) {
+        state = state.copy(examPaperUri = uri)
+    }
+
+    fun onExamPaperBitmapChanged(bitmap: Bitmap?) {
+        state = state.copy(examPaperBitmap = bitmap)
+    }
+
+    fun uploadPapers() {
+        // In a real app, this would upload the papers to a server or cloud storage
+        // For this example, we'll just simulate a successful upload
+        state = state.copy(isUploading = true, uploadError = null)
+
+        viewModelScope.launch {
+            try {
+                // Simulate network delay
+                kotlinx.coroutines.delay(2000)
+
+                // Check if exam paper is selected
+                if (state.examPaperBitmap == null) {
+                    state = state.copy(
+                        isUploading = false,
+                        uploadError = "Please select an exam paper"
+                    )
+                    return@launch
+                }
+
+                // Update student correction status
+                if (state.exam != null && state.student != null) {
+                    examRepository.updateStudentCorrectionStatus(
+                        examId = examId,
+                        studentId = studentId,
+                        isCorrected = true
+                    )
+                }
+
+                // Simulate successful upload
+                state = state.copy(
+                    isUploading = false,
+                    uploadSuccess = true
+                )
+            } catch (e: Exception) {
+                state = state.copy(
+                    isUploading = false,
+                    uploadError = "Error uploading paper: ${e.message}"
+                )
+            }
+        }
+    }
+
+    fun resetUpload() {
+        state = state.copy(
+            examPaperUri = null,
+            examPaperBitmap = null,
+            isUploading = false,
+            uploadSuccess = false,
+            uploadError = null
+        )
+    }
+}

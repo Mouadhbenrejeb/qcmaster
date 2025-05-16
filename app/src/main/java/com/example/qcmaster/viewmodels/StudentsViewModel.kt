@@ -35,7 +35,7 @@ class StudentsViewModel : ViewModel() {
     init {
         // Load students data from Firebase
         loadStudents()
-        
+
         // Load available classes
         loadAvailableClasses()
     }
@@ -44,7 +44,7 @@ class StudentsViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 updateState(isLoading = true)
-                
+
                 // Observe students from repository
                 studentRepository.students.collectLatest { studentsList ->
                     updateState(
@@ -130,12 +130,12 @@ class StudentsViewModel : ViewModel() {
         viewModelScope.launch {
             // Validate inputs
             var isValid = true
-            
+
             if (_state.name.isBlank()) {
                 updateState(nameError = "Name cannot be empty")
                 isValid = false
             }
-            
+
             if (!_state.cin.matches(Regex("\\d{8}"))) {
                 updateState(cinError = "CIN must be exactly 8 digits")
                 isValid = false
@@ -147,26 +147,30 @@ class StudentsViewModel : ViewModel() {
                     isValid = false
                 }
             }
-            
+
             if (_state.selectedClass.isBlank()) {
                 // We could add a class error, but for now just return
                 isValid = false
             }
-            
+
             if (isValid) {
                 try {
+                    // Show loading indicator
+                    updateState(isLoading = true)
+
                     // Create new student
                     val newStudent = Student(
                         name = _state.name,
                         cin = _state.cin,
                         assignedClass = _state.selectedClass
                     )
-                    
+
                     // Add to repository
                     studentRepository.addStudent(newStudent)
-                    
+
                     // Close dialog
                     updateState(
+                        isLoading = false,
                         showAddStudentDialog = false,
                         name = "",
                         cin = "",
@@ -175,6 +179,7 @@ class StudentsViewModel : ViewModel() {
                 } catch (e: Exception) {
                     // Show error
                     updateState(
+                        isLoading = false,
                         error = "Error adding student: ${e.message}"
                     )
                 }
@@ -185,9 +190,15 @@ class StudentsViewModel : ViewModel() {
     val onDeleteStudent: (String) -> Unit = { studentCin ->
         viewModelScope.launch {
             try {
+                // Show loading indicator
+                updateState(isLoading = true)
+
                 studentRepository.removeStudent(studentCin)
+
+                // Loading indicator will be hidden when the students flow updates
             } catch (e: Exception) {
                 updateState(
+                    isLoading = false,
                     error = "Error deleting student: ${e.message}"
                 )
             }

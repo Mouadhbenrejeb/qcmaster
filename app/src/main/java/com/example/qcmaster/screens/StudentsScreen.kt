@@ -359,8 +359,7 @@ fun StudentCard(
             }
 
             IconButton(
-                onClick = onDelete,
-                modifier = Modifier
+                onClick = onDelete, modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
                     .background(MaterialTheme.colorScheme.errorContainer)
                     .size(40.dp)

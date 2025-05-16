@@ -27,21 +27,21 @@ sealed interface Route {
         override val route: String = "exams"
     }
 
-    data class AssignClassesToExamScreen(val examName: String) : Route {
-        override val route: String = "assign_classes_to_exam/$examName"
+    data class AssignClassesToExamScreen(val examId: String) : Route {
+        override val route: String = "assign_classes_to_exam/$examId"
 
         companion object {
-            const val route = "assign_classes_to_exam/{examName}"
-            const val examNameArg = "examName"
+            const val route = "assign_classes_to_exam/{examId}"
+            const val examIdArg = "examId"
         }
     }
 
-    data class ScanExamScreen(val examName: String) : Route {
-        override val route: String = "scan_exam/$examName"
+    data class ScanExamScreen(val examId: String) : Route {
+        override val route: String = "scan_exam/$examId"
 
         companion object {
-            const val route = "scan_exam/{examName}"
-            const val examNameArg = "examName"
+            const val route = "scan_exam/{examId}"
+            const val examIdArg = "examId"
         }
     }
 
@@ -64,7 +64,53 @@ sealed interface Route {
         }
     }
 
-    data object CorrectionComparisonScreen : Route {
-        override val route: String = "correction_comparison_screen"
+    data class CorrectionComparisonScreen(val examId: String, val className: String, val studentId: String) : Route {
+        override val route: String = "correction_comparison_screen/$examId/$className/$studentId"
+
+        companion object {
+            const val route = "correction_comparison_screen/{examId}/{className}/{studentId}"
+            const val examIdArg = "examId"
+            const val classNameArg = "className"
+            const val studentIdArg = "studentId"
+        }
+    }
+
+    data class ExamCorrectionClassSelectionScreen(val examId: String) : Route {
+        override val route: String = "exam_correction_class_selection/$examId"
+
+        companion object {
+            const val route = "exam_correction_class_selection/{examId}"
+            const val examIdArg = "examId"
+        }
+    }
+
+    data class ExamCorrectionStudentSelectionScreen(val examId: String, val className: String) : Route {
+        override val route: String = "exam_correction_student_selection/$examId/$className"
+
+        companion object {
+            const val route = "exam_correction_student_selection/{examId}/{className}"
+            const val examIdArg = "examId"
+            const val classNameArg = "className"
+        }
+    }
+
+    data class ExamAnswerPaperUploadScreen(val examId: String) : Route {
+        override val route: String = "exam_answer_paper_upload/$examId"
+
+        companion object {
+            const val route = "exam_answer_paper_upload/{examId}"
+            const val examIdArg = "examId"
+        }
+    }
+
+    data class ExamCorrectionPaperUploadScreen(val examId: String, val className: String, val studentId: String) : Route {
+        override val route: String = "exam_correction_paper_upload/$examId/$className/$studentId"
+
+        companion object {
+            const val route = "exam_correction_paper_upload/{examId}/{className}/{studentId}"
+            const val examIdArg = "examId"
+            const val classNameArg = "className"
+            const val studentIdArg = "studentId"
+        }
     }
 }
