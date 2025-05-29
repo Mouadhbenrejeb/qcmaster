@@ -8,7 +8,8 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.qcmaster.ai.Circle
+import com.example.qcmaster.ai.AnswerRow
+import com.example.qcmaster.ai.Shape
 import com.example.qcmaster.ai.extractAnswersOpenCv
 import com.example.qcmaster.models.Exam
 import com.example.qcmaster.data.FirebaseExamRepository
@@ -22,7 +23,7 @@ data class ScanExamUiState(
     val isProcessing: Boolean = false,
     val error: String? = null,
     val bitmap: ImageBitmap? = null,
-    val circles: List<Circle> = emptyList(),
+    val answers: List<AnswerRow> = emptyList(),
     val correctAnswers: Map<String, String> = emptyMap()
 )
 
@@ -76,10 +77,7 @@ class ScanExamViewModel(private val examId: String) : ViewModel() {
                 val result = extractAnswersOpenCv(answerKeyBitmap = bitmap)
 
                 updateState(
-                    correctAnswers = result.answers
-                        .mapKeys { it.toString() }
-                        .mapValues { it.toString() },
-                    circles = result.circles,
+                    answers = result.answers,
                     bitmap = result.bitmap?.asImageBitmap(),
                     isProcessing = false
                 )
@@ -89,7 +87,7 @@ class ScanExamViewModel(private val examId: String) : ViewModel() {
                     // Show loading indicator for Firebase operation
                     updateState(isProcessing = true)
 
-                    val answers = result.answers.map { "${it.key}:${it.value}" }
+                    val answers = result.answers.mapIndexed { index, row -> "${index}:${row.answer}" }
                     val saveSuccess = examRepository.saveCorrectAnswers(examId, answers)
 
                     // Update state based on save result
@@ -110,8 +108,7 @@ class ScanExamViewModel(private val examId: String) : ViewModel() {
     // Clear the current scan results
     val clearScanResults: () -> Unit = {
         updateState(
-            correctAnswers = emptyMap(),
-            circles = emptyList(),
+            answers = emptyList(),
             bitmap = null,
             error = null
         )
@@ -124,8 +121,7 @@ class ScanExamViewModel(private val examId: String) : ViewModel() {
         isProcessing: Boolean = _state.isProcessing,
         error: String? = _state.error,
         bitmap: ImageBitmap? = _state.bitmap,
-        circles: List<Circle> = _state.circles,
-        correctAnswers: Map<String, String> = _state.correctAnswers
+        answers: List<AnswerRow> = _state.answers,
     ) {
         _state = _state.copy(
             exam = exam,
@@ -133,8 +129,7 @@ class ScanExamViewModel(private val examId: String) : ViewModel() {
             isProcessing = isProcessing,
             error = error,
             bitmap = bitmap,
-            circles = circles,
-            correctAnswers = correctAnswers
+            answers = answers,
         )
     }
 }

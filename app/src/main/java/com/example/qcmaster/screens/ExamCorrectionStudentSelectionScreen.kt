@@ -20,7 +20,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.qcmaster.Route
+import com.example.qcmaster.Routes
 import com.example.qcmaster.models.Exam
 import com.example.qcmaster.models.Student
 import com.example.qcmaster.ui.theme.QcmasterTheme
@@ -59,7 +59,7 @@ fun ExamCorrectionStudentSelectionScreen(
             navController.popBackStack()
         },
         onStudentSelected = { student ->
-            navController.navigate(Route.ExamCorrectionPaperUploadScreen(examId, className, student.cin).route)
+            navController.navigate(Routes.ExamCorrectionPaperUpload.createRoute(examId, className, student.cin))
         }
     )
 }

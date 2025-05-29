@@ -24,7 +24,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.qcmaster.R
-import com.example.qcmaster.Route
+import com.example.qcmaster.Routes
 import com.example.qcmaster.SessionManager
 import com.example.qcmaster.components.MyNavigationBar
 import com.example.qcmaster.data.FirebaseAuthRepository
@@ -46,13 +46,13 @@ fun HomeScreen(
         onShowProfile = viewModel.onShowProfileDialog,
         onDismissProfile = viewModel.onDismissProfileDialog,
         onLogout = { viewModel.onLogout {
-            navController.navigate(Route.AuthScreen.route) {
-                popUpTo(Route.HomeScreen.route) { inclusive = true }
+            navController.navigate(Routes.Auth.route) {
+                popUpTo(Routes.Home.route) { inclusive = true }
             }
         }},
-        onNavigateToExams = { navController.navigate(Route.ExamsScreen.route) },
-        onNavigateToClasses = { navController.navigate(Route.ClassesScreen.route) },
-        onNavigateToStudents = { navController.navigate(Route.StudentsScreen.route) },
+        onNavigateToExams = { navController.navigate(Routes.Exams.route) },
+        onNavigateToClasses = { navController.navigate(Routes.Classes.route) },
+        onNavigateToStudents = { navController.navigate(Routes.Students.route) },
         navController = navController
     )
 }

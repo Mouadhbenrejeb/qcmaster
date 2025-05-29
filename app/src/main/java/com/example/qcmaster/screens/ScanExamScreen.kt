@@ -22,8 +22,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.background
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -34,8 +34,8 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.qcmaster.ai.Circle
+import com.example.qcmaster.ai.Square
 import com.example.qcmaster.models.Exam
 import com.example.qcmaster.ui.theme.QcmasterTheme
 import com.example.qcmaster.viewmodels.ScanExamUiState
@@ -352,22 +352,41 @@ fun ScanExamContent(
                                             val scaleX = size.width / bitmap.width
                                             val scaleY = size.height / bitmap.height
 
-                                            state.circles.forEach { circle ->
-                                                val radius = circle.radius * scaleX
-                                                val centerX = (circle.center.x * scaleX).toFloat()
-                                                val centerY = (circle.center.y * scaleY).toFloat()
+                                            state.answers.forEach { shape ->
+                                                if (shape is Circle) {
+                                                    val radius = shape.radius * scaleX
+                                                    val centerX = shape.center.x * scaleX
+                                                    val centerY = shape.center.y * scaleY
 
-                                                drawCircle(
-                                                    color = Color.Red,
-                                                    radius = radius,
-                                                    center = Offset(
-                                                        x = centerX,
-                                                        y = centerY
-                                                    ),
-                                                    style = Stroke(
-                                                        width = 2.dp.toPx()
+                                                    drawCircle(
+                                                        color = Color.Red,
+                                                        radius = radius,
+                                                        center = Offset(
+                                                            x = centerX,
+                                                            y = centerY
+                                                        ),
+                                                        style = Stroke(
+                                                            width = 2.dp.toPx()
+                                                        )
                                                     )
-                                                )
+                                                }
+
+                                                if (shape is Square) {
+                                                    drawRect(
+                                                        color = Color.Red,
+                                                        topLeft = Offset(
+                                                            x = shape.topLeft.x * scaleX,
+                                                            y = shape.topLeft.y * scaleY
+                                                        ),
+                                                        size = Size(
+                                                            width = shape.size * scaleX,
+                                                            height = shape.size * scaleY
+                                                        ),
+                                                        style = Stroke(
+                                                            width = 2.dp.toPx()
+                                                        )
+                                                    )
+                                                }
                                             }
                                         }
                                 )

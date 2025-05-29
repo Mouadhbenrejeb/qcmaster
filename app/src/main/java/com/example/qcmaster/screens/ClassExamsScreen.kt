@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.qcmaster.Routes
 import com.example.qcmaster.data.FakeExamRepository
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,7 +29,7 @@ fun ClassExamsScreen(navController: NavController, className: String) {
                 exams.forEach { exam ->
                     Button(
                         onClick = {
-                            navController.navigate("class_exam_grades/$className/$exam")
+                            navController.navigate(Routes.ExamStudentGrades.createRoute(className, exam))
                         },
                         modifier = Modifier
                             .fillMaxWidth()

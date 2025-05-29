@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.qcmaster.Route
+import com.example.qcmaster.Routes
 import com.example.qcmaster.components.MyNavigationBar
 import com.example.qcmaster.models.Exam
 import com.example.qcmaster.ui.theme.QcmasterTheme
@@ -192,7 +192,7 @@ fun ExamsScreenContent(
                                 },
                                 onCorrectExam = {
                                     // Navigate to ExamCorrectionClassSelectionScreen
-                                    navController.navigate(Route.ExamCorrectionClassSelectionScreen(exam.id).route)
+                                    navController.navigate(Routes.ExamCorrectionClassSelection.createRoute(exam.id))
                                 },
                                 onDelete = { onDeleteExam(exam.id) }
                             )

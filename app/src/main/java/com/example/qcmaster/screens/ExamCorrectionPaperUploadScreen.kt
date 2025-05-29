@@ -33,6 +33,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.qcmaster.Routes
 import com.example.qcmaster.models.Exam
 import com.example.qcmaster.models.Student
 import com.example.qcmaster.ui.theme.QcmasterTheme
@@ -259,11 +260,11 @@ fun ExamCorrectionPaperUploadContent(
                                 onClick = { 
                                     if (navController != null && examId != null && className != null && studentId != null) {
                                         navController.navigate(
-                                            com.example.qcmaster.Route.CorrectionComparisonScreen(
+                                            Routes.CorrectionComparison.createRoute(
                                                 examId, 
                                                 className, 
                                                 studentId
-                                            ).route
+                                            )
                                         )
                                     }
                                 },

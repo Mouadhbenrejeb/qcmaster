@@ -33,7 +33,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.qcmaster.Route
+import com.example.qcmaster.Routes
 import com.example.qcmaster.models.Exam
 import com.example.qcmaster.ui.theme.QcmasterTheme
 import com.example.qcmaster.viewmodels.ExamAnswerPaperUploadViewModel
@@ -79,8 +79,8 @@ fun ExamAnswerPaperUploadScreen(
         errorMessage = errorMessage,
         onErrorMessageChanged = { errorMessage = it },
         onContinueToClassSelection = {
-            navController.navigate(Route.ExamCorrectionClassSelectionScreen(examId).route) {
-                popUpTo(Route.ExamAnswerPaperUploadScreen.route) { inclusive = true }
+            navController.navigate(Routes.ExamCorrectionClassSelection.createRoute(examId)) {
+                popUpTo(Routes.ExamAnswerPaperUpload.route) { inclusive = true }
             }
         }
     )

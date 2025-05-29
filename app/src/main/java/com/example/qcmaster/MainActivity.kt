@@ -31,6 +31,7 @@ import com.example.qcmaster.screens.ExamAnswerPaperUploadScreen
 import com.example.qcmaster.screens.ExamCorrectionClassSelectionScreen
 import com.example.qcmaster.screens.ExamCorrectionStudentSelectionScreen
 import com.example.qcmaster.screens.ExamCorrectionPaperUploadScreen
+import com.example.qcmaster.screens.DebugScreen
 import android.Manifest
 import android.content.pm.PackageManager
 import com.example.qcmaster.data.FirebaseAuthRepository
@@ -82,47 +83,47 @@ class MainActivity : ComponentActivity() {
 
                 NavHost(
                     navController = navController,
-                    startDestination = if (isLoggedIn) Route.HomeScreen.route else Route.AuthScreen.route
+                    startDestination = Routes.Debug.route
                 ) {
                     // Auth screens
-                    composable(Route.AuthScreen.route) { 
+                    composable(Routes.Auth.route) { 
                         AuthScreen(
                             onNavigateToHome = {
-                                navController.navigate(Route.HomeScreen.route) {
-                                    popUpTo(Route.AuthScreen.route) { inclusive = true }
+                                navController.navigate(Routes.Home.route) {
+                                    popUpTo(Routes.Auth.route) { inclusive = true }
                                 }
                             },
                             onNavigateToRegister = {
-                                navController.navigate(Route.RegisterScreen.route)
+                                navController.navigate(Routes.Register.route)
                             }
                         ) 
                     }
 
-                    composable(Route.RegisterScreen.route) { 
+                    composable(Routes.Register.route) { 
                         RegisterScreen(
                             onNavigateToHome = {
-                                navController.navigate(Route.HomeScreen.route) {
-                                    popUpTo(Route.RegisterScreen.route) { inclusive = true }
+                                navController.navigate(Routes.Home.route) {
+                                    popUpTo(Routes.Register.route) { inclusive = true }
                                 }
                             },
                             onNavigateToLogin = {
-                                navController.navigate(Route.AuthScreen.route) {
-                                    popUpTo(Route.RegisterScreen.route) { inclusive = true }
+                                navController.navigate(Routes.Auth.route) {
+                                    popUpTo(Routes.Register.route) { inclusive = true }
                                 }
                             }
                         ) 
                     }
 
                     // Home screen
-                    composable(Route.HomeScreen.route) {
+                    composable(Routes.Home.route) {
                         val profName = SessionManager.profName
                         val profEmail = SessionManager.profEmail
 
                         // Check if user is still logged in
                         LaunchedEffect(currentUser) {
                             if (currentUser == null && SessionManager.getEmail().isEmpty()) {
-                                navController.navigate(Route.AuthScreen.route) {
-                                    popUpTo(Route.HomeScreen.route) { inclusive = true }
+                                navController.navigate(Routes.Auth.route) {
+                                    popUpTo(Routes.Home.route) { inclusive = true }
                                 }
                             }
                         }
@@ -131,150 +132,155 @@ class MainActivity : ComponentActivity() {
                     }
 
                     // Main screens
-                    composable(Route.ClassesScreen.route) { 
+                    composable(Routes.Classes.route) { 
                         ClassesScreen(navController) 
                     }
 
-                    composable(Route.StudentsScreen.route) { 
+                    composable(Routes.Students.route) { 
                         StudentsScreen(navController) 
                     }
 
-                    composable(Route.ExamsScreen.route) { 
+                    composable(Routes.Exams.route) { 
                         ExamsScreen(navController) 
                     }
 
                     // Screens with parameters
                     composable(
-                        route = Route.AssignClassesToExamScreen.route,
+                        route = Routes.AssignClassesToExam.route,
                         arguments = listOf(
-                            navArgument(Route.AssignClassesToExamScreen.examIdArg) {
+                            navArgument(Routes.AssignClassesToExam.examIdArg) {
                                 type = NavType.StringType
                             }
                         )
                     ) { backStackEntry ->
-                        val examId = backStackEntry.arguments?.getString(Route.AssignClassesToExamScreen.examIdArg) ?: ""
+                        val examId = backStackEntry.arguments?.getString(Routes.AssignClassesToExam.examIdArg) ?: ""
                         AssignClassesToExamScreen(navController, examId)
                     }
 
                     composable(
-                        route = Route.ScanExamScreen.route,
+                        route = Routes.ScanExam.route,
                         arguments = listOf(
-                            navArgument(Route.ScanExamScreen.examIdArg) {
+                            navArgument(Routes.ScanExam.examIdArg) {
                                 type = NavType.StringType
                             }
                         )
                     ) { backStackEntry ->
-                        val examId = backStackEntry.arguments?.getString(Route.ScanExamScreen.examIdArg) ?: ""
+                        val examId = backStackEntry.arguments?.getString(Routes.ScanExam.examIdArg) ?: ""
                         ScanExamScreen(navController, examId)
                     }
 
                     composable(
-                        route = Route.ClassExamsScreen.route,
+                        route = Routes.ClassExams.route,
                         arguments = listOf(
-                            navArgument(Route.ClassExamsScreen.classNameArg) {
+                            navArgument(Routes.ClassExams.classNameArg) {
                                 type = NavType.StringType
                             }
                         )
                     ) { backStackEntry ->
-                        val className = backStackEntry.arguments?.getString(Route.ClassExamsScreen.classNameArg) ?: ""
+                        val className = backStackEntry.arguments?.getString(Routes.ClassExams.classNameArg) ?: ""
                         ClassExamsScreen(navController, className)
                     }
 
                     composable(
-                        route = Route.ExamStudentGradesScreen.route,
+                        route = Routes.ExamStudentGrades.route,
                         arguments = listOf(
-                            navArgument(Route.ExamStudentGradesScreen.classNameArg) {
+                            navArgument(Routes.ExamStudentGrades.classNameArg) {
                                 type = NavType.StringType
                             },
-                            navArgument(Route.ExamStudentGradesScreen.examNameArg) {
+                            navArgument(Routes.ExamStudentGrades.examNameArg) {
                                 type = NavType.StringType
                             }
                         )
                     ) { backStackEntry ->
-                        val className = backStackEntry.arguments?.getString(Route.ExamStudentGradesScreen.classNameArg) ?: ""
-                        val examName = backStackEntry.arguments?.getString(Route.ExamStudentGradesScreen.examNameArg) ?: ""
+                        val className = backStackEntry.arguments?.getString(Routes.ExamStudentGrades.classNameArg) ?: ""
+                        val examName = backStackEntry.arguments?.getString(Routes.ExamStudentGrades.examNameArg) ?: ""
                         ExamStudentGradesScreen(className, examName)
                     }
 
                     composable(
-                        route = Route.CorrectionComparisonScreen.route,
+                        route = Routes.CorrectionComparison.route,
                         arguments = listOf(
-                            navArgument(Route.CorrectionComparisonScreen.examIdArg) {
+                            navArgument(Routes.CorrectionComparison.examIdArg) {
                                 type = NavType.StringType
                             },
-                            navArgument(Route.CorrectionComparisonScreen.classNameArg) {
+                            navArgument(Routes.CorrectionComparison.classNameArg) {
                                 type = NavType.StringType
                             },
-                            navArgument(Route.CorrectionComparisonScreen.studentIdArg) {
+                            navArgument(Routes.CorrectionComparison.studentIdArg) {
                                 type = NavType.StringType
                             }
                         )
                     ) { backStackEntry ->
-                        val examId = backStackEntry.arguments?.getString(Route.CorrectionComparisonScreen.examIdArg) ?: ""
-                        val className = backStackEntry.arguments?.getString(Route.CorrectionComparisonScreen.classNameArg) ?: ""
-                        val studentId = backStackEntry.arguments?.getString(Route.CorrectionComparisonScreen.studentIdArg) ?: ""
+                        val examId = backStackEntry.arguments?.getString(Routes.CorrectionComparison.examIdArg) ?: ""
+                        val className = backStackEntry.arguments?.getString(Routes.CorrectionComparison.classNameArg) ?: ""
+                        val studentId = backStackEntry.arguments?.getString(Routes.CorrectionComparison.studentIdArg) ?: ""
                         CorrectionComparisonScreen(navController, examId, className, studentId)
                     }
 
                     // Exam correction screens
                     composable(
-                        route = Route.ExamAnswerPaperUploadScreen.route,
+                        route = Routes.ExamAnswerPaperUpload.route,
                         arguments = listOf(
-                            navArgument(Route.ExamAnswerPaperUploadScreen.examIdArg) {
+                            navArgument(Routes.ExamAnswerPaperUpload.examIdArg) {
                                 type = NavType.StringType
                             }
                         )
                     ) { backStackEntry ->
-                        val examId = backStackEntry.arguments?.getString(Route.ExamAnswerPaperUploadScreen.examIdArg) ?: ""
+                        val examId = backStackEntry.arguments?.getString(Routes.ExamAnswerPaperUpload.examIdArg) ?: ""
                         ExamAnswerPaperUploadScreen(navController, examId)
                     }
 
                     composable(
-                        route = Route.ExamCorrectionClassSelectionScreen.route,
+                        route = Routes.ExamCorrectionClassSelection.route,
                         arguments = listOf(
-                            navArgument(Route.ExamCorrectionClassSelectionScreen.examIdArg) {
+                            navArgument(Routes.ExamCorrectionClassSelection.examIdArg) {
                                 type = NavType.StringType
                             }
                         )
                     ) { backStackEntry ->
-                        val examId = backStackEntry.arguments?.getString(Route.ExamCorrectionClassSelectionScreen.examIdArg) ?: ""
+                        val examId = backStackEntry.arguments?.getString(Routes.ExamCorrectionClassSelection.examIdArg) ?: ""
                         ExamCorrectionClassSelectionScreen(navController, examId)
                     }
 
                     composable(
-                        route = Route.ExamCorrectionStudentSelectionScreen.route,
+                        route = Routes.ExamCorrectionStudentSelection.route,
                         arguments = listOf(
-                            navArgument(Route.ExamCorrectionStudentSelectionScreen.examIdArg) {
+                            navArgument(Routes.ExamCorrectionStudentSelection.examIdArg) {
                                 type = NavType.StringType
                             },
-                            navArgument(Route.ExamCorrectionStudentSelectionScreen.classNameArg) {
+                            navArgument(Routes.ExamCorrectionStudentSelection.classNameArg) {
                                 type = NavType.StringType
                             }
                         )
                     ) { backStackEntry ->
-                        val examId = backStackEntry.arguments?.getString(Route.ExamCorrectionStudentSelectionScreen.examIdArg) ?: ""
-                        val className = backStackEntry.arguments?.getString(Route.ExamCorrectionStudentSelectionScreen.classNameArg) ?: ""
+                        val examId = backStackEntry.arguments?.getString(Routes.ExamCorrectionStudentSelection.examIdArg) ?: ""
+                        val className = backStackEntry.arguments?.getString(Routes.ExamCorrectionStudentSelection.classNameArg) ?: ""
                         ExamCorrectionStudentSelectionScreen(navController, examId, className)
                     }
 
                     composable(
-                        route = Route.ExamCorrectionPaperUploadScreen.route,
+                        route = Routes.ExamCorrectionPaperUpload.route,
                         arguments = listOf(
-                            navArgument(Route.ExamCorrectionPaperUploadScreen.examIdArg) {
+                            navArgument(Routes.ExamCorrectionPaperUpload.examIdArg) {
                                 type = NavType.StringType
                             },
-                            navArgument(Route.ExamCorrectionPaperUploadScreen.classNameArg) {
+                            navArgument(Routes.ExamCorrectionPaperUpload.classNameArg) {
                                 type = NavType.StringType
                             },
-                            navArgument(Route.ExamCorrectionPaperUploadScreen.studentIdArg) {
+                            navArgument(Routes.ExamCorrectionPaperUpload.studentIdArg) {
                                 type = NavType.StringType
                             }
                         )
                     ) { backStackEntry ->
-                        val examId = backStackEntry.arguments?.getString(Route.ExamCorrectionPaperUploadScreen.examIdArg) ?: ""
-                        val className = backStackEntry.arguments?.getString(Route.ExamCorrectionPaperUploadScreen.classNameArg) ?: ""
-                        val studentId = backStackEntry.arguments?.getString(Route.ExamCorrectionPaperUploadScreen.studentIdArg) ?: ""
+                        val examId = backStackEntry.arguments?.getString(Routes.ExamCorrectionPaperUpload.examIdArg) ?: ""
+                        val className = backStackEntry.arguments?.getString(Routes.ExamCorrectionPaperUpload.classNameArg) ?: ""
+                        val studentId = backStackEntry.arguments?.getString(Routes.ExamCorrectionPaperUpload.studentIdArg) ?: ""
                         ExamCorrectionPaperUploadScreen(navController, examId, className, studentId)
+                    }
+
+                    // Debug screen
+                    composable(Routes.Debug.route) {
+                        DebugScreen(navController)
                     }
                 }
             }

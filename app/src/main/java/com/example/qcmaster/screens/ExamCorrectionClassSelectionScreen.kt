@@ -19,7 +19,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.qcmaster.Route
+import com.example.qcmaster.Routes
 import com.example.qcmaster.models.Exam
 import com.example.qcmaster.ui.theme.QcmasterTheme
 import com.example.qcmaster.viewmodels.ExamCorrectionClassSelectionViewModel
@@ -51,8 +51,8 @@ fun ExamCorrectionClassSelectionScreen(
     LaunchedEffect(state.exam) {
         if (state.exam != null && !state.exam.answerPaperUploaded) {
             // Navigate to answer paper upload screen
-            navController.navigate(Route.ExamAnswerPaperUploadScreen(examId).route) {
-                popUpTo(Route.ExamCorrectionClassSelectionScreen.route) { inclusive = true }
+            navController.navigate(Routes.ExamAnswerPaperUpload.createRoute(examId)) {
+                popUpTo(Routes.ExamCorrectionClassSelection.route) { inclusive = true }
             }
         }
     }
@@ -63,7 +63,7 @@ fun ExamCorrectionClassSelectionScreen(
             navController.popBackStack()
         },
         onClassSelected = { className ->
-            navController.navigate(Route.ExamCorrectionStudentSelectionScreen(examId, className).route)
+            navController.navigate(Routes.ExamCorrectionStudentSelection.createRoute(examId, className))
         }
     )
 }

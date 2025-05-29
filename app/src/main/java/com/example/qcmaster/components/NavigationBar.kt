@@ -13,7 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.example.qcmaster.Route
+import com.example.qcmaster.Routes
 import com.example.qcmaster.SessionManager
 
 @Composable
@@ -22,10 +22,10 @@ fun MyNavigationBar(navController: NavController) {
 
     val items = listOf("Home", "Classes", "Students", "Exams")
     val routes = listOf(
-        Route.HomeScreen.route,
-        Route.ClassesScreen.route,
-        Route.StudentsScreen.route,
-        Route.ExamsScreen.route
+        Routes.Home.route,
+        Routes.Classes.route,
+        Routes.Students.route,
+        Routes.Exams.route
     )
     val selectedIcons = listOf(
         Icons.Filled.Home,
@@ -42,10 +42,10 @@ fun MyNavigationBar(navController: NavController) {
 
     val currentRoute = navBackStackEntry.value?.destination?.route
     val selectedIndex = when (currentRoute) {
-        Route.HomeScreen.route -> 0
-        Route.ClassesScreen.route -> 1
-        Route.StudentsScreen.route -> 2
-        Route.ExamsScreen.route -> 3
+        Routes.Home.route -> 0
+        Routes.Classes.route -> 1
+        Routes.Students.route -> 2
+        Routes.Exams.route -> 3
         else -> 0
     }
 
@@ -65,8 +65,8 @@ fun MyNavigationBar(navController: NavController) {
                     navController.navigate(routes[index]) {
                         // Pop up to the start destination of the graph to avoid building up a large stack
                         // of destinations on the back stack as users select items
-                        popUpTo(Route.HomeScreen.route) {
-                            saveState = true
+                        popUpTo(Routes.Home.route) {
+                            inclusive = false
                         }
                         // Avoid multiple copies of the same destination when reselecting the same item
                         launchSingleTop = true
