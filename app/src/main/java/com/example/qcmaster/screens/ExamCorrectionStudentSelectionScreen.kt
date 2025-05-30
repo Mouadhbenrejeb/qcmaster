@@ -174,7 +174,7 @@ fun ExamCorrectionStudentSelectionContent(
                                 student = student,
                                 onStudentSelected = { onStudentSelected(student) },
                                 isCorrected = state.exam?.correctedStudents?.get(student.cin) ?: false,
-                                mark = state.exam?.studentMarks?.get(student.cin)
+                                mark = state.exam?.studentMarks?.get(student.cin)?.toInt()
                             )
                         }
                     }

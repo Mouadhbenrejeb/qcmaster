@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -36,6 +37,12 @@ fun ExamsScreen(
     viewModel: ExamsViewModel = viewModel()
 ) {
     val state = viewModel.state
+    val context = LocalContext.current
+
+    // Function to extract notes for a specific exam and class
+    val onExtractNotes: (Exam, String) -> Unit = { exam, className ->
+        viewModel.extractStudentNotes(context, exam, className)
+    }
 
     ExamsScreenContent(
         state = state,
@@ -48,6 +55,7 @@ fun ExamsScreen(
         onAddExam = viewModel.onAddExam,
         onUpdateExam = viewModel.onUpdateExam,
         onDeleteExam = viewModel.onDeleteExam,
+        onExtractNotes = onExtractNotes,
         navController = navController
     )
 }
@@ -64,6 +72,7 @@ fun ExamsScreenContent(
     onAddExam: () -> Unit,
     onUpdateExam: () -> Unit,
     onDeleteExam: (String) -> Unit,
+    onExtractNotes: (Exam, String) -> Unit = { _, _ -> },
     navController: NavController
 ) {
     Scaffold(
@@ -194,7 +203,20 @@ fun ExamsScreenContent(
                                     // Navigate to ExamCorrectionClassSelectionScreen
                                     navController.navigate(Routes.ExamCorrectionClassSelection.createRoute(exam.id))
                                 },
-                                onDelete = { onDeleteExam(exam.id) }
+                                onDelete = { onDeleteExam(exam.id) },
+                                onExtractNotes = {
+                                    // If exam has multiple classes, show dialog to select class
+                                    if (exam.assignedClasses.size > 1) {
+                                        // For simplicity, use the first class
+                                        // In a real app, you would show a dialog to select the class
+                                        val className = exam.assignedClasses.first()
+                                        onExtractNotes(exam, className)
+                                    } else if (exam.assignedClasses.size == 1) {
+                                        // If exam has only one class, use that class
+                                        val className = exam.assignedClasses.first()
+                                        onExtractNotes(exam, className)
+                                    }
+                                }
                             )
                         }
                     }
@@ -418,7 +440,8 @@ fun ExamCard(
     exam: Exam,
     onExamClick: () -> Unit,
     onCorrectExam: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onExtractNotes: () -> Unit = {}
 ) {
     Card(
         onClick = onExamClick,
@@ -530,6 +553,21 @@ fun ExamCard(
                     )
                 ) {
                     Text("Correct Exam Papers")
+                }
+
+                // Add Extract Notes button if exam has student marks
+                if (exam.studentMarks.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Button(
+                        onClick = onExtractNotes,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.tertiary
+                        )
+                    ) {
+                        Text("Extract Class Notes as PDF")
+                    }
                 }
             }
         }

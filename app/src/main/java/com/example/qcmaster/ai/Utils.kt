@@ -184,96 +184,97 @@ suspend fun extractAnswers(
     }
 }
 
+/**
+ * Extracts answers from an exam answer key bitmap using OpenCV image processing.
+ *
+ * @param answerKeyBitmap The bitmap image of the answer key to process
+ * @return AnswersResult containing the detected answers and processed bitmap
+ */
 suspend fun extractAnswersOpenCv(
     answerKeyBitmap: Bitmap,
 ): AnswersResult {
+    // Convert the bitmap to grayscale and binary for processing
     val gray = answerKeyBitmap.toGrayMat()
-    val bw   = gray.toBinary()
+    val bw = gray.toBinary()
 
-//    val blurred = Mat()
-//    Imgproc.GaussianBlur(gray, blurred, Size(5.0, 5.0), 0.0)
-//
-//    val bw = Mat()
-//    Imgproc.adaptiveThreshold(
-//        blurred, bw,
-//        255.0,
-//        Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
-//        Imgproc.THRESH_BINARY_INV, // NOTE: Inverted threshold
-//        21,  // block size (odd)
-//        10.0  // tweakable constant
-//    )
-//
-//    val kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(3.0, 3.0))
-//    Imgproc.morphologyEx(bw, bw, Imgproc.MORPH_CLOSE, kernel)
-
-    println("answerKeyBitmap size: ${answerKeyBitmap.width}x${answerKeyBitmap.height}")
-    println("bw size: ${bw.width()}x${bw.height()}")
-
+    // Calculate appropriate circle size parameters based on image dimensions
     val minCircleRadius = bw.width() / 20
     val maxCircleRadius = bw.width() / 6
     val minCircleArea = Math.PI * minCircleRadius * minCircleRadius
     val maxCircleArea = Math.PI * maxCircleRadius * maxCircleRadius
 
-    println("minCircleArea: $minCircleArea")
-    println("maxCircleArea: $maxCircleArea")
-
-    // detect circles
+    // Detect circles in the binary image
     val shapes = bw.findCircles(
-        minArea = minCircleArea,  // tune for your scan DPI
+        minArea = minCircleArea,
         maxArea = maxCircleArea
     )
-//    val rows = circles.groupByRow(rowCount = 10)
     val rows = shapes
 
+    // Create a bitmap from the processed image
     val bitmap = createBitmap(bw.cols(), bw.rows())
-
     Utils.matToBitmap(bw, bitmap)
 
-    // for each question (row), detect filled
+    // For each row of circles (question), detect which one is filled
     return AnswersResult(
         answers = rows.mapIndexed { index, rowCircles ->
             val sortedShapes = rowCircles.sortedBy { it.center.x }
-
-            println("Detect filled for row: $index")
-            val index = gray.detectFilled(sortedShapes, bitmap = answerKeyBitmap.copy(Bitmap.Config.ARGB_8888, false))
+            val filledIndex = gray.detectFilled(
+                sortedShapes, 
+                bitmap = answerKeyBitmap.copy(Bitmap.Config.ARGB_8888, false)
+            )
 
             AnswerRow(
                 shapes = sortedShapes,
-                answer = index ?: -1,
-//                answer = -1,
+                answer = filledIndex ?: -1,
             )
         },
         bitmap = bitmap,
     )
 }
 
+/**
+ * Converts a Bitmap to a grayscale OpenCV Mat.
+ * 
+ * @return A grayscale Mat representation of the bitmap
+ */
 fun Bitmap.toGrayMat(): Mat {
-    // 1) ensure we have an ARGB_8888, immutable (or at least lockable) bitmap
+    // Ensure we have an ARGB_8888 bitmap that can be locked for processing
     val lockable = copy(Bitmap.Config.ARGB_8888, false)
 
-    // 2) convert to Mat
+    // Convert bitmap to OpenCV Mat format
     val rgba = Mat()
     Utils.bitmapToMat(lockable, rgba)
 
-    // 3) convert to gray
+    // Convert RGBA to grayscale
     val gray = Mat()
     Imgproc.cvtColor(rgba, gray, Imgproc.COLOR_RGBA2GRAY)
+
+    // Release the intermediate Mat to free memory
     rgba.release()
 
     return gray
 }
 
-
+/**
+ * Converts a grayscale Mat to a binary (black and white) Mat using adaptive thresholding.
+ * This is optimized for detecting filled bubbles in answer sheets.
+ * 
+ * @return A binary Mat where bubbles (ink) appear as white
+ */
 fun Mat.toBinary(): Mat {
     val bw = Mat()
-    // inverted: bubbles (ink) = white
+
+    // Apply adaptive thresholding with inverted output (bubbles/ink = white)
     Imgproc.adaptiveThreshold(
         this, bw, 255.0,
         Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
         Imgproc.THRESH_BINARY_INV,
         15, 10.0
     )
+
+    // Release the source Mat to free memory
     this.release()
+
     return bw
 }
 
@@ -400,63 +401,89 @@ fun List<Shape>.groupByRow(rowCount: Int = 10): List<List<Shape>> {
     return rows.map { it.sortedBy { c -> c.center.x } }
 }
 
+/**
+ * Detects which circle in a list is filled (darkened) based on pixel analysis.
+ *
+ * @param circles List of shapes (circles) to analyze
+ * @param threshold Darkness threshold ratio to consider a circle as filled (default 0.5)
+ * @param bitmap Source bitmap to analyze pixels from
+ * @return Index of the first filled circle, or null if none are filled
+ */
 fun Mat.detectFilled(circles: List<Shape>, threshold: Double = 0.5, bitmap: Bitmap): Int? {
     // Create these once and reuse
-    val mask     = Mat.zeros(this.size(), CvType.CV_8U)
-    val masked   = Mat()
+    val mask = Mat.zeros(this.size(), CvType.CV_8U)
+    val masked = Mat()
 
     var filledIndex: Int? = null
-    for ((i, c) in circles.withIndex()) {
-        val centerX = c.center.x
-        val centerY = c.center.y
-        val radius = c.size / 2f
-        var darkPixels = 0
-        var totalPixels = 0
-        var allPixels = 0
 
-        val startX = max(0f, centerX - radius)
-        val endX = min(bitmap.width - 1f, centerX + radius)
-        val startY = max(0f, centerY - radius)
-        val endY = min(bitmap.height - 1f, centerY + radius)
+    // Analyze each circle to find the filled one
+    for ((i, circle) in circles.withIndex()) {
+        val fillRatio = calculateFillRatio(circle, bitmap, threshold)
 
-        val s = 2
-
-        println("startX: $startX, endX: $endX, startY: $startY, endY: $endY, s: $s")
-
-        for (x in startX.toInt()..endX.toInt() step s) {
-            for (y in startY.toInt()..endY.toInt() step s) {
-                val dx = x - centerX
-                val dy = y - centerY
-                if (dx * dx + dy * dy <= radius * radius) {
-                    val color = bitmap[x, y]
-                    val gray = (Color.red(color) + Color.green(color) + Color.blue(color)) / 3
-                    totalPixels++
-                    if (gray / 255f < threshold) darkPixels++
-                }
-                allPixels++
-            }
-        }
-
-        val fillRatio =
-            if (totalPixels == 0)
-                0.0
-            else
-                darkPixels.toDouble() / totalPixels
-
-        println("all pixels for $i = $allPixels")
-        println("total pixels for $i = $totalPixels")
-        println("dark pixels for $i = $darkPixels")
-        println("center for $i = ${c.center}, radius; $radius")
-
+        // If the fill ratio is above threshold, consider this circle as filled
         if (fillRatio >= threshold) {
             filledIndex = i
             break
         }
     }
 
+    // Release resources
     mask.release()
     masked.release()
+
     return filledIndex
+}
+
+/**
+ * Calculates the fill ratio (proportion of dark pixels) within a circle.
+ *
+ * @param circle The circle shape to analyze
+ * @param bitmap Source bitmap to analyze pixels from
+ * @param threshold Darkness threshold to consider a pixel as dark
+ * @return Ratio of dark pixels to total pixels within the circle (0.0 to 1.0)
+ */
+private fun calculateFillRatio(circle: Shape, bitmap: Bitmap, threshold: Double): Double {
+    val centerX = circle.center.x
+    val centerY = circle.center.y
+    val radius = circle.size / 2f
+    var darkPixels = 0
+    var totalPixels = 0
+
+    // Define the bounding box of the circle
+    val startX = max(0f, centerX - radius)
+    val endX = min(bitmap.width - 1f, centerX + radius)
+    val startY = max(0f, centerY - radius)
+    val endY = min(bitmap.height - 1f, centerY + radius)
+
+    // Sample step size (analyze every nth pixel for performance)
+    val sampleStep = 2
+
+    // Analyze pixels within the circle
+    for (x in startX.toInt()..endX.toInt() step sampleStep) {
+        for (y in startY.toInt()..endY.toInt() step sampleStep) {
+            // Check if the pixel is within the circle
+            val dx = x - centerX
+            val dy = y - centerY
+            if (dx * dx + dy * dy <= radius * radius) {
+                // Get pixel color and convert to grayscale
+                val color = bitmap[x, y]
+                val grayValue = (Color.red(color) + Color.green(color) + Color.blue(color)) / 3
+
+                totalPixels++
+                // Check if the pixel is dark enough
+                if (grayValue / 255f < threshold) {
+                    darkPixels++
+                }
+            }
+        }
+    }
+
+    // Calculate the fill ratio
+    return if (totalPixels == 0) {
+        0.0
+    } else {
+        darkPixels.toDouble() / totalPixels
+    }
 }
 
 /**

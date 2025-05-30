@@ -1,12 +1,18 @@
 package com.example.qcmaster.viewmodels
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.qcmaster.models.Exam
 import com.example.qcmaster.data.FirebaseExamRepository
+import com.example.qcmaster.data.FirebaseStudentRepository
+import com.example.qcmaster.utils.PdfUtils
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -27,6 +33,7 @@ data class ExamsUiState(
 
 class ExamsViewModel : ViewModel() {
     private val examRepository = FirebaseExamRepository.getInstance()
+    private val studentRepository = FirebaseStudentRepository.getInstance()
 
     // Single state object
     private var _state by mutableStateOf(ExamsUiState(isLoading = true))
@@ -38,6 +45,82 @@ class ExamsViewModel : ViewModel() {
 
         // Load available classes
         loadAvailableClasses()
+    }
+
+    /**
+     * Extracts student notes for a specific exam and class as a PDF.
+     * 
+     * @param context Android context
+     * @param exam The exam for which to extract notes
+     * @param className The name of the class
+     */
+    fun extractStudentNotes(context: Context, exam: Exam, className: String) {
+        viewModelScope.launch {
+            try {
+                updateState(isLoading = true)
+
+                // Get students for the class
+                val students = studentRepository.getStudentsForClass(className)
+
+                if (students.isEmpty()) {
+                    updateState(
+                        isLoading = false,
+                        error = "No students found for class $className"
+                    )
+                    return@launch
+                }
+
+                // Generate PDF
+                val pdfFile = PdfUtils.generateExamResultsPdf(
+                    context = context,
+                    exam = exam,
+                    className = className,
+                    students = students
+                )
+
+                if (pdfFile == null) {
+                    updateState(
+                        isLoading = false,
+                        error = "Failed to generate PDF"
+                    )
+                    return@launch
+                }
+
+                // Share the PDF
+                sharePdf(context, pdfFile)
+
+                updateState(isLoading = false)
+            } catch (e: Exception) {
+                updateState(
+                    isLoading = false,
+                    error = "Error extracting notes: ${e.message}"
+                )
+            }
+        }
+    }
+
+    /**
+     * Shares a PDF file using Android's share intent.
+     * 
+     * @param context Android context
+     * @param pdfFile The PDF file to share
+     */
+    private fun sharePdf(context: Context, pdfFile: java.io.File) {
+        val uri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.provider",
+            pdfFile
+        )
+
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, "application/pdf")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+
+        val chooser = Intent.createChooser(intent, "Open PDF")
+        chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+        context.startActivity(chooser)
     }
 
     private fun loadExams() {

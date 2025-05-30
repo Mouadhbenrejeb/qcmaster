@@ -18,5 +18,5 @@ data class Exam(
     val correctAnswers: List<String> = emptyList(),
     val answerPaperUploaded: Boolean = false,
     val correctedStudents: Map<String, Boolean> = emptyMap(),
-    val studentMarks: Map<String, Int> = emptyMap()
+    val studentMarks: Map<String, Long> = emptyMap()
 )

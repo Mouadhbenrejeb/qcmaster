@@ -83,7 +83,7 @@ class MainActivity : ComponentActivity() {
 
                 NavHost(
                     navController = navController,
-                    startDestination = Routes.Debug.route
+                    startDestination = if (isLoggedIn) Routes.Home.route else Routes.Auth.route
                 ) {
                     // Auth screens
                     composable(Routes.Auth.route) { 

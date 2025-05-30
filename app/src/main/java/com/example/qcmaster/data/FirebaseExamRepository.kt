@@ -37,7 +37,7 @@ class FirebaseExamRepository {
                         val correctAnswers = doc.get("correctAnswers") as? List<String> ?: emptyList()
                         val answerPaperUploaded = doc.getBoolean("answerPaperUploaded") ?: false
                         val correctedStudents = doc.get("correctedStudents") as? Map<String, Boolean> ?: emptyMap()
-                        val studentMarks = doc.get("studentMarks") as? Map<String, Int> ?: emptyMap()
+                        val studentMarks = doc.get("studentMarks") as? Map<String, Long> ?: emptyMap()
 
                         Exam(
                             id = id,
