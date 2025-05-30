@@ -33,6 +33,7 @@ import androidx.core.graphics.createBitmap
 import kotlin.math.absoluteValue
 import kotlin.math.min
 import androidx.core.graphics.get
+import kotlin.math.abs
 
 
 // 1️⃣ Data models (reuse from before)
@@ -328,7 +329,7 @@ fun Mat.findCircles(minArea: Double, maxArea: Double): List<List<Shape>> {
         contours = qcmCandidates,
         imageHeight = height(),
         minInRowCount = 3,
-        yTolerancePct = 0.02,
+        yTolerancePct = 0.1,
         spacingTolerancePct = 0.1
     )
 
@@ -628,13 +629,15 @@ fun filterByRowPattern(
 
     // 1) cluster by Y
     data class C(val contour: MatOfPoint, val center: Point)
-    val yTolPx = yTolerancePct * imageHeight
     val centers = contours.map { C(it, contourCenter(it)) }
 
     val yClusters = mutableListOf<MutableList<C>>()
     for (c in centers) {
         val row = yClusters.find { cluster ->
-            cluster.any { Math.abs(it.center.y - c.center.y) <= yTolPx }
+            cluster.any {
+                val yTolPx = yTolerancePct * it.contour.height()
+                abs(it.center.y - c.center.y) <= yTolPx
+            }
         }
         if (row != null) row += c else yClusters += mutableListOf(c)
     }
@@ -674,7 +677,28 @@ fun filterByRowPattern(
 //        subrows.forEach { row -> row.forEach { accepted += it.contour } }
     }
 
-    return subrows.map { it.map { it.contour } }
+    subrows
+        .sortBy { it.minOf { it.center.y } }
+
+    if (subrows.size > 10) {
+        val cinrows = subrows
+            .subList(0, 10)
+
+        if (cinrows.all { it.size == 8 }) {
+            for (i in 9 downTo 0) {
+                subrows.removeAt(i)
+            }
+        }
+    }
+
+//    return yClusters.map { it.map { it.contour } }
+    return subrows
+        .filterNot { it.isEmpty() }
+        .onEach {
+            it.sortBy { it.center.x }
+        }
+        .sortedWith(compareBy({ it.first().center.y }, { it.first().center.x }))
+        .map { it.map { it.contour } }
 //    return contours.filter { it in accepted }
 }
 
