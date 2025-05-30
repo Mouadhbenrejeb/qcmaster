@@ -22,6 +22,7 @@ data class CorrectionComparisonUiState(
     val correctAnswers: List<String> = emptyList(),
     val studentAnswers: List<String> = emptyList(),
     val score: Int = 0,
+    val scoreOutOf20: Int = 0,
     val correctCount: Int = 0,
     val totalQuestions: Int = 0
 )
@@ -96,20 +97,20 @@ class CorrectionComparisonViewModel(
         }
     }
 
-    // Dummy function to get correct answers
+    // Load correct answers from the exam
     private fun loadCorrectAnswers() {
         viewModelScope.launch {
             try {
-                // In a real app, this would fetch the correct answers from a database
-                // For this example, we'll just use dummy data
-                val dummyCorrectAnswers = listOf("A", "B", "C", "D", "A", "B", "C", "D", "A", "B")
+                // Use the correct answers from the exam model
+                val exam = state.exam
+                if (exam != null && exam.correctAnswers.isNotEmpty()) {
+                    state = state.copy(
+                        correctAnswers = exam.correctAnswers,
+                        totalQuestions = exam.correctAnswers.size
+                    )
 
-                state = state.copy(
-                    correctAnswers = dummyCorrectAnswers,
-                    totalQuestions = dummyCorrectAnswers.size
-                )
-
-                calculateScore()
+                    calculateScore()
+                }
             } catch (e: Exception) {
                 state = state.copy(
                     error = "Error loading correct answers: ${e.message}",
@@ -119,19 +120,25 @@ class CorrectionComparisonViewModel(
         }
     }
 
-    // Dummy function to get student answers
+    // Load student answers from the repository
     private fun loadStudentAnswers() {
         viewModelScope.launch {
             try {
-                // In a real app, this would process the uploaded exam paper to extract answers
-                // For this example, we'll just use dummy data
-                val dummyStudentAnswers = listOf("A", "B", "C", "A", "A", "D", "C", "D", "B", "B")
+                // Get the student answers from the repository
+                val studentAnswers = examRepository.getStudentAnswers(examId, studentId)
 
-                state = state.copy(
-                    studentAnswers = dummyStudentAnswers
-                )
+                if (studentAnswers.isNotEmpty()) {
+                    state = state.copy(
+                        studentAnswers = studentAnswers
+                    )
 
-                calculateScore()
+                    calculateScore()
+                } else {
+                    state = state.copy(
+                        error = "No answers found for this student",
+                        isLoading = false
+                    )
+                }
             } catch (e: Exception) {
                 state = state.copy(
                     error = "Error loading student answers: ${e.message}",
@@ -155,9 +162,17 @@ class CorrectionComparisonViewModel(
                 0
             }
 
+            // Calculate score out of 20
+            val scoreOutOf20 = if (correctAnswers.size > 0) {
+                (correctCount * 20) / correctAnswers.size
+            } else {
+                0
+            }
+
             state = state.copy(
                 correctCount = correctCount,
-                score = score
+                score = score,
+                scoreOutOf20 = scoreOutOf20
             )
 
             // Save the score to the database

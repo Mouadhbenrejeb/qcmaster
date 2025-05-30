@@ -226,7 +226,7 @@ fun ScanExamContent(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    if (state.correctAnswers.isEmpty()) {
+                    if (state.letterAnswers.isEmpty()) {
                         // No answers yet, show scan options
                         Card(
                             modifier = Modifier
@@ -304,7 +304,7 @@ fun ScanExamContent(
                                 Spacer(modifier = Modifier.height(8.dp))
 
                                 Text(
-                                    text = "Found ${state.correctAnswers.size} answers",
+                                    text = "Found ${state.letterAnswers.size} answers",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
@@ -436,7 +436,8 @@ fun ScanExamScreenPreview() {
             isLoading = false,
             isProcessing = false,
             error = null,
-            correctAnswers = emptyMap()
+            correctAnswers = emptyMap(),
+            letterAnswers = emptyList()
         )
 
         ScanExamContent(
@@ -466,7 +467,8 @@ fun ScanExamScreenWithAnswersPreview() {
             isLoading = false,
             isProcessing = false,
             error = null,
-            correctAnswers = mapOf("1" to "A", "2" to "B", "3" to "C")
+            correctAnswers = mapOf("1" to "1", "2" to "2", "3" to "3"),
+            letterAnswers = listOf("1", "2", "3")
         )
 
         ScanExamContent(
@@ -488,7 +490,8 @@ fun ScanExamScreenWithAnswersPreview() {
 fun ScanExamScreenLoadingPreview() {
     QcmasterTheme {
         val dummyState = ScanExamUiState(
-            isLoading = true
+            isLoading = true,
+            letterAnswers = emptyList()
         )
 
         ScanExamContent(
@@ -511,7 +514,8 @@ fun ScanExamScreenErrorPreview() {
     QcmasterTheme {
         val dummyState = ScanExamUiState(
             isLoading = false,
-            error = "Failed to load exam details"
+            error = "Failed to load exam details",
+            letterAnswers = emptyList()
         )
 
         ScanExamContent(

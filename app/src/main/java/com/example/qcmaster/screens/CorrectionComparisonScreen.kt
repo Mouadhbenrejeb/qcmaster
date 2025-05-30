@@ -176,7 +176,7 @@ fun CorrectionComparisonContent(state: CorrectionComparisonUiState) {
 //                )
 
                 Text(
-                    text = "✅ Note: 17/20",
+                    text = "✅ Note: ${state.scoreOutOf20}/20",
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -297,8 +297,8 @@ fun CorrectionComparisonScreenPreview() {
             className = "Computer Science",
             isLoading = false,
             error = null,
-            correctAnswers = listOf("A", "B", "C", "D", "A"),
-            studentAnswers = listOf("A", "B", "C", "A", "A"),
+            correctAnswers = listOf("1", "2", "3", "4", "1"),
+            studentAnswers = listOf("1", "2", "3", "4", "1"),
             score = 80,
             correctCount = 4,
             totalQuestions = 5

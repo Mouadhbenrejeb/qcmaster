@@ -24,7 +24,8 @@ data class ScanExamUiState(
     val error: String? = null,
     val bitmap: ImageBitmap? = null,
     val answers: List<AnswerRow> = emptyList(),
-    val correctAnswers: Map<String, String> = emptyMap()
+    val correctAnswers: Map<String, String> = emptyMap(),
+    val letterAnswers: List<String> = emptyList()
 )
 
 class ScanExamViewModel(private val examId: String) : ViewModel() {
@@ -87,12 +88,14 @@ class ScanExamViewModel(private val examId: String) : ViewModel() {
                     // Show loading indicator for Firebase operation
                     updateState(isProcessing = true)
 
-                    val answers = result.answers.mapIndexed { index, row -> "${index}:${row.answer}" }
-                    val saveSuccess = examRepository.saveCorrectAnswers(examId, answers)
+                    // Keep answers as indices
+                    val indexAnswers = result.answers.map { row -> row.answer.toString() }
+                    val saveSuccess = examRepository.saveCorrectAnswers(examId, indexAnswers)
 
                     // Update state based on save result
                     updateState(
                         isProcessing = false,
+                        letterAnswers = indexAnswers,
                         error = if (!saveSuccess) "Failed to save answers to server" else null
                     )
                 }
@@ -122,6 +125,7 @@ class ScanExamViewModel(private val examId: String) : ViewModel() {
         error: String? = _state.error,
         bitmap: ImageBitmap? = _state.bitmap,
         answers: List<AnswerRow> = _state.answers,
+        letterAnswers: List<String> = _state.letterAnswers,
     ) {
         _state = _state.copy(
             exam = exam,
@@ -130,6 +134,7 @@ class ScanExamViewModel(private val examId: String) : ViewModel() {
             error = error,
             bitmap = bitmap,
             answers = answers,
+            letterAnswers = letterAnswers,
         )
     }
 }

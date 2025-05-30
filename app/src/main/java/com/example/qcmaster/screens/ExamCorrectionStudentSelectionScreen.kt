@@ -265,7 +265,7 @@ fun CorrectionStudentCard(
                     if (isCorrected) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "• Note: 17/20",
+                            text = "• Note: ${mark?.let { (it * 20) / 100 } ?: 0}/20",
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary

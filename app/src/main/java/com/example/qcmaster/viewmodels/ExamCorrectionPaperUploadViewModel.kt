@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.qcmaster.ai.extractAnswersOpenCv
 import com.example.qcmaster.data.FirebaseExamRepository
 import com.example.qcmaster.data.FirebaseStudentRepository
 import com.example.qcmaster.models.Exam
@@ -104,15 +105,11 @@ class ExamCorrectionPaperUploadViewModel(
     }
 
     fun uploadPapers() {
-        // In a real app, this would upload the papers to a server or cloud storage
-        // For this example, we'll just simulate a successful upload
+        // Process the exam paper and extract student answers
         state = state.copy(isUploading = true, uploadError = null)
 
         viewModelScope.launch {
             try {
-                // Simulate network delay
-                kotlinx.coroutines.delay(2000)
-
                 // Check if exam paper is selected
                 if (state.examPaperBitmap == null) {
                     state = state.copy(
@@ -122,24 +119,53 @@ class ExamCorrectionPaperUploadViewModel(
                     return@launch
                 }
 
-                // Update student correction status
-                if (state.exam != null && state.student != null) {
-                    examRepository.updateStudentCorrectionStatus(
+                // Extract student answers from the exam paper
+                val bitmap = state.examPaperBitmap ?: return@launch
+                val result = extractAnswersOpenCv(bitmap)
+
+                if (result.answers.isNotEmpty()) {
+                    // Keep answers as indices
+                    val studentAnswers = result.answers.map { row -> row.answer.toString() }
+
+                    // Save student answers to the database
+                    val saveSuccess = examRepository.saveStudentAnswers(
                         examId = examId,
-                        studentId = studentId,
-                        isCorrected = true
+                        studentCIN = studentId,
+                        answers = studentAnswers
+                    )
+
+                    if (!saveSuccess) {
+                        state = state.copy(
+                            isUploading = false,
+                            uploadError = "Failed to save student answers"
+                        )
+                        return@launch
+                    }
+
+                    // Update student correction status
+                    if (state.exam != null && state.student != null) {
+                        examRepository.updateStudentCorrectionStatus(
+                            examId = examId,
+                            studentId = studentId,
+                            isCorrected = true
+                        )
+                    }
+
+                    // Upload successful
+                    state = state.copy(
+                        isUploading = false,
+                        uploadSuccess = true
+                    )
+                } else {
+                    state = state.copy(
+                        isUploading = false,
+                        uploadError = "Failed to extract answers from the exam paper"
                     )
                 }
-
-                // Simulate successful upload
-                state = state.copy(
-                    isUploading = false,
-                    uploadSuccess = true
-                )
             } catch (e: Exception) {
                 state = state.copy(
                     isUploading = false,
-                    uploadError = "Error uploading paper: ${e.message}"
+                    uploadError = "Error processing exam paper: ${e.message}"
                 )
             }
         }

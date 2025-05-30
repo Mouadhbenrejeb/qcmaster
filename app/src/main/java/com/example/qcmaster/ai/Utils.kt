@@ -194,43 +194,45 @@ suspend fun extractAnswers(
 suspend fun extractAnswersOpenCv(
     answerKeyBitmap: Bitmap,
 ): AnswersResult {
-    // Convert the bitmap to grayscale and binary for processing
-    val gray = answerKeyBitmap.toGrayMat()
-    val bw = gray.toBinary()
+    return withContext(Dispatchers.Default) {
+        // Convert the bitmap to grayscale and binary for processing
+        val gray = answerKeyBitmap.toGrayMat()
+        val bw = gray.toBinary()
 
-    // Calculate appropriate circle size parameters based on image dimensions
-    val minCircleRadius = bw.width() / 20
-    val maxCircleRadius = bw.width() / 6
-    val minCircleArea = Math.PI * minCircleRadius * minCircleRadius
-    val maxCircleArea = Math.PI * maxCircleRadius * maxCircleRadius
+        // Calculate appropriate circle size parameters based on image dimensions
+        val minCircleRadius = bw.width() / 20
+        val maxCircleRadius = bw.width() / 6
+        val minCircleArea = Math.PI * minCircleRadius * minCircleRadius
+        val maxCircleArea = Math.PI * maxCircleRadius * maxCircleRadius
 
-    // Detect circles in the binary image
-    val shapes = bw.findCircles(
-        minArea = minCircleArea,
-        maxArea = maxCircleArea
-    )
-    val rows = shapes
+        // Detect circles in the binary image
+        val shapes = bw.findCircles(
+            minArea = minCircleArea,
+            maxArea = maxCircleArea
+        )
+        val rows = shapes
 
-    // Create a bitmap from the processed image
-    val bitmap = createBitmap(bw.cols(), bw.rows())
-    Utils.matToBitmap(bw, bitmap)
+        // Create a bitmap from the processed image
+        val bitmap = createBitmap(bw.cols(), bw.rows())
+        Utils.matToBitmap(bw, bitmap)
 
-    // For each row of circles (question), detect which one is filled
-    return AnswersResult(
-        answers = rows.mapIndexed { index, rowCircles ->
-            val sortedShapes = rowCircles.sortedBy { it.center.x }
-            val filledIndex = gray.detectFilled(
-                sortedShapes, 
-                bitmap = answerKeyBitmap.copy(Bitmap.Config.ARGB_8888, false)
-            )
+        // For each row of circles (question), detect which one is filled
+        AnswersResult(
+            answers = rows.mapIndexed { index, rowCircles ->
+                val sortedShapes = rowCircles.sortedBy { it.center.x }
+                val filledIndex = gray.detectFilled(
+                    sortedShapes,
+                    bitmap = answerKeyBitmap.copy(Bitmap.Config.ARGB_8888, false)
+                )
 
-            AnswerRow(
-                shapes = sortedShapes,
-                answer = filledIndex ?: -1,
-            )
-        },
-        bitmap = bitmap,
-    )
+                AnswerRow(
+                    shapes = sortedShapes,
+                    answer = filledIndex ?: -1,
+                )
+            },
+            bitmap = bitmap,
+        )
+    }
 }
 
 /**
